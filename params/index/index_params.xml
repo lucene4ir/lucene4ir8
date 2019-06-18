@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<indexParams>
+    <indexName>index</indexName>
+    <fileList>data/cacm_file_list</fileList>
+    <indexType>cacm</indexType>
+    <tokenFilterFile>params/index/example_03.xml</tokenFilterFile>
+    <recordPositions>true</recordPositions>
+</indexParams>

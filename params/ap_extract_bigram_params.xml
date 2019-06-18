@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<BigramGeneratorParams>
+    <indexName>apindex</indexName>
+    <outFile>data/ap_bigram.out</outFile>
+    <cutoff>3</cutoff>
+</BigramGeneratorParams>

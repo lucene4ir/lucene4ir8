@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<retrievalParams>
+    <indexName>aqindex</indexName>
+    <queryFile>data/aquaint/title.trec2005.aquaint.query</queryFile>
+    <maxResults>1000</maxResults>
+    <model>bm25l</model>
+    <b>0.75</b>
+    <delta>1.0</delta>
+    <resultFile>data/aquaint/bm25l_trec2005_aq.75.res</resultFile>
+</retrievalParams>

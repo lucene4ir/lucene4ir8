@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<BigramGeneratorParams>
+    <indexName>bigram_index</indexName>
+    <outFile>bigram.out</outFile>
+    <cutoff>5</cutoff>
+</BigramGeneratorParams>

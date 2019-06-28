@@ -3,10 +3,10 @@
     Based on the following book  :
     Title : "Foundations of Statistical Natural Language Processing" By
     Author : Christopher   D.   Manning and Hinrich  Schiitze
+    URL : https://www.cs.vassar.edu/~cs366/docs/Manning_Schuetze_StatisticalNLP.pdf
     Mutual Information
     Browser Page (206) - Paper Page (178)
 */
-
 
 // Import Section
 package main.java.lucene4ir;

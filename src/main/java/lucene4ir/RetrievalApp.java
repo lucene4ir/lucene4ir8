@@ -204,7 +204,7 @@ public class RetrievalApp {
 
                     for(int i=0; i<n; i++){
                         Document doc = searcher.doc(scored[i].doc);
-                        String docno = doc.get("docnum");
+                        String docno = doc.get(Lucene4IRConstants.FIELD_DOCNUM);
                         fw.write(qno + " QO " + docno + " " + (i+1) + " " + scored[i].score + " " + p.runTag);
                         fw.write(System.lineSeparator());
                     }

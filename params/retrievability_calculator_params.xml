@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<RetrievabilityCalculatorParams>
+
+    <!--Inputs-->
+    <!-- The Index to Read From-->
+    <indexName>index</indexName>
+
+    <!--output File-->
+    <!--DocID - r-->
+    <retFile>out/RetrievabilityCalculatorList.txt</retFile>
+
+    <!--Other RetrievalApp Params -->
+    <queryWeightFile>out/Qry Weight.txt</queryWeightFile>
+    <resFile>out/Result.res</resFile>
+
+   <!-- Cost Function Params-->
+    <b>4</b>
+    <c>50</c>
+
+</RetrievabilityCalculatorParams>

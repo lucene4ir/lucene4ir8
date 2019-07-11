@@ -9,7 +9,7 @@
 */
 
 // Import Section
-package main.java.lucene4ir;
+package lucene4ir;
 import org.apache.lucene.index.*;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;

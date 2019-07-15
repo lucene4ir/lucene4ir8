@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<project name="Lucene8IRANT" default="main" xmlns:artifact="antlib:org.apache.maven.artifact.ant"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="antlib:org.apache.maven.artifact.ant ">
+
+    <!--General Properties-->
+    <property name="srcDir"
+              location="src/main/java/lucene4ir"
+              description="Directory Of Source .java Files"
+    />
+    <property name="buildDir"
+              location="Staging"
+              description="Directory Of java compiled .class Files"
+    />
+
+
+    <!--Define POM File -->
+    <artifact:pom id="mypom"
+                  file="pom.xml"
+                  description="POM.XML File to get dependencies from"
+    />
+
+    <artifact:dependencies
+            filesetId="mydeps"
+            pomRefId="mypom"
+            description="List of Maven Jar Files from POM.XML Dependencies"
+    />
+
+    <path id="generalClassPath"
+          description="General Class Path Used For All Targets">
+       <!-- Maven Jars-->
+        <fileset refid="mydeps" />
+        <!--Java Home Jars-->
+        <fileset dir="${java.home}" includes="**/*.jar"/>
+       <!-- .class Files-->
+        <pathelement location="${buildDir}"/>
+    </path>
+
+
+    <!--General Targets-->
+    <!-- Clean (Delete) Build Directory -->
+    <target name="clean" description="Delete Duild Directory">
+        <delete dir="${buildDir}"/>
+    </target>
+    <!-- Initialize (Create) New Build Directory -->
+    <target name="init"
+            depends="clean"
+            description="Initialize New Build Directory"
+    >
+        <mkdir dir="${buildDir}"/>
+    </target>
+
+   <!-- Initialize Out Folder-->
+    <target name="clearOutput">
+        <delete dir="out"/>
+        <mkdir dir="out"/>
+    </target>
+    <!--End OF General Targets-->
+
+    <!--Define Compile Target (Extract .class files from .java files -->
+    <target name="compile"
+    description="Compile All Classes in Source Folder (Lucene4IR)"
+    >
+        <echo>Compiling and Extracting .class files</echo>
+        <javac destdir="${buildDir}" includeantruntime="false"
+               srcdir="${srcDir}" classpathref="generalClassPath"/>
+        <echo>Compiling is done</echo>
+    </target>
+    <!--End Define Compile Target -->
+
+
+   <!-- Different Runs For Different Classes-->
+
+   <!-- Run IndexerApp-->
+    <target name="RunIndexer"
+            description="Run IndexerApp"
+    >
+        <echo>Running IndexerApp Class</echo>
+        <java classname="lucene4ir.IndexerApp" classpathref="generalClassPath">
+            <arg file="params/index/index_params.xml" />
+        </java>
+    </target>
+
+   <!-- Run Bigram Generator App-->
+    <target name="RunBigramGenerator"
+            description="Run Bigram Generator App"
+    >
+        <echo>Running Bigram Generator Class</echo>
+        <java classname="lucene4ir.BigramGeneratorApp" classpathref="generalClassPath">
+            <arg file="params/bigram_generator_params.xml" />
+        </java>
+        <echo>End of Run</echo>
+    </target>
+
+   <!-- Run RetrievalApp-->
+    <target name="RunRetrievalApp"
+    description="Run RetrievalApp"
+    >
+        <echo>Running Retrieval App Class</echo>
+        <java classname="lucene4ir.RetrievalApp" classpathref="generalClassPath">
+            <arg file="params/retrieval_params.xml" />
+        </java>
+        <echo>End of Run</echo>
+    </target>
+
+    <!--Run Retrievability Calculator App-->
+    <target name="RunRetrievabilityCalculator"
+    description="Run Retrievability Calculator App"
+    >
+        <echo>Running Retrievability Calculator Class</echo>
+        <java classname="lucene4ir.RetrievabilityCalculatorApp" classpathref="generalClassPath">
+            <arg file="params/retrievability_calculator_params.xml" />
+        </java>
+        <echo>End of Run</echo>
+    </target>
+
+</project>

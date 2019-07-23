@@ -168,7 +168,10 @@ public class RetrievabilityCalculatorApp {
     {
         double result = 0;
         if (rank <= p.c)
+            // Gravity Exponential Function
             result = 1.0 / Math.pow(rank,p.b);
+            // Cumulative Boolean Function Based on Query Weight
+            // result = 1;
         return result;
     } // End Function
 
@@ -177,10 +180,9 @@ public class RetrievabilityCalculatorApp {
     {
       //  Calculate Utility/Cost Function
 
-        double result  , weight;
-        if (p.queryWeightFile.isEmpty())
-            weight = 1;
-        else
+        double result  , weight = 1;
+        // If query weight is not exist weight = 1
+        if (!p.queryWeightFile.isEmpty())
             weight = qryMap.get(qryID);
 
         result = weight * costFunction(rank);
@@ -196,7 +198,7 @@ public class RetrievabilityCalculatorApp {
          */
         String line, parts[];
         int docid , qryid , rank ;
-        double r ;
+        double r = 1; // Default for document counter method (counting documents in .res file)
 
         BufferedReader br = new BufferedReader(new FileReader(p.resFile));
         while ((line = br.readLine()) != null) {
@@ -209,7 +211,6 @@ public class RetrievabilityCalculatorApp {
         } // End While
         br.close();
     } // End Function
-
 
     private void initQueryMap( ) throws Exception
     {
@@ -280,4 +281,3 @@ public class RetrievabilityCalculatorApp {
         public int   b , c;
     }
 }
-

@@ -9,7 +9,7 @@
 */
 
 // Import Section
-package main.java.lucene4ir;
+package lucene4ir;
 import org.apache.lucene.index.*;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
@@ -165,6 +165,13 @@ public class BigramGeneratorApp {
         } // End while
         // Close and Save output Writer
         outBigrams.close();
+        leafReader = null;
+    } // End Function
+
+    private void close()
+    {
+        // Close function to release memory
+        unigramMap = null;
     } // End Function
 
     private double calculatePMI(double pi, double pj, double pij)
@@ -180,23 +187,26 @@ public class BigramGeneratorApp {
     public void createBigrams() throws Exception {
         // check if the index has shingles of size 2
 
+        String fldName = lucene4ir.Lucene4IRConstants.FIELD_RAW;
         // Read Parameters File
         readParamsFromFile(inputParameterFile);
         // create array with term list i.e. unigrams (term, count)
-        createUnigramList(lucene4ir.Lucene4IRConstants.FIELD_RAW);
+        createUnigramList(fldName);
         // extract bigrams
-        extractBigrams(lucene4ir.Lucene4IRConstants.FIELD_RAW);
+        extractBigrams(fldName);
+        reader.close();
+        close();
     } // End Function
 
     public static void main (String args[])
     {
-        // Main (Mystro Function) - Coordinate the process
-        
+        // RunExperimentsRetrievabilityCalculatorApp (Mystro Function) - Coordinate the process
         String bigramParamFile = "";
         try {
             bigramParamFile = args[0];
             BigramGeneratorApp bga = new BigramGeneratorApp(bigramParamFile);
             bga.createBigrams();
+
         } catch (Exception e) {
             System.out.println(" caught a " + e.getClass() +
                     "\n with message: " + e.getMessage());

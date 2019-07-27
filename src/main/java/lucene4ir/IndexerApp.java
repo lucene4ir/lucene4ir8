@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
-
+import utils.CrossDirectoryClass;
 import lucene4ir.indexer.*;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.store.FSDirectory;
@@ -29,7 +29,7 @@ public class IndexerApp {
 
 
     private enum DocumentModel {
-        CACM, CLUEWEB, TRECNEWS, TRECCC, TRECAQUAINT, TRECWEB, TRECTIPSTER, PUBMED
+        CACM, CLUEWEB, TRECNEWS, TRECCC, TRECAQUAINT, TRECWEB, TRECTIPSTER, PUBMED , COMMONCORE , JSONLINE
     }
 
     private DocumentModel docModel;
@@ -99,6 +99,16 @@ public class IndexerApp {
                 di = new PubMedDocumentIndexer(p.indexName, p.tokenFilterFile, p.recordPositions);
                 break;
 
+            case COMMONCORE:
+                System.out.println("COMMONCORE");
+                di = new CommonCoreDocumentIndexer(p.indexName, p.tokenFilterFile, p.recordPositions);
+                break;
+
+            case JSONLINE:
+                System.out.println("JSONLINE");
+                di = new JsonLineDocumentIndexer(p.indexName, p.tokenFilterFile, p.recordPositions);
+                break;
+
 
             default:
                 System.out.println("Default Document Parser");
@@ -106,8 +116,6 @@ public class IndexerApp {
                 break;
         }
     }
-
-
 
 
     public ArrayList<String> readFileListFromFile(){
@@ -120,23 +128,32 @@ public class IndexerApp {
 
         ArrayList<String> files = new ArrayList<String>();
 
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(filename));
-            try {
-                String line = br.readLine();
-                while (line != null){
-                    files.add(line);
-                    line = br.readLine();
-                }
 
-            } finally {
-                br.close();
-            }
-        } catch (Exception e){
-            e.printStackTrace();
-            System.exit(1);
+        CrossDirectoryClass cd;
+
+        // check whether the input filename is a folder
+        if (new File(filename).isDirectory()) {
+            cd = new CrossDirectoryClass(filename);
+            files = cd.crossDirectory();
         }
-        return files;
+        else
+            try {
+                BufferedReader br = new BufferedReader(new FileReader(filename));
+                try {
+                    String line = br.readLine();
+                    while (line != null){
+                        files.add(line);
+                        line = br.readLine();
+                    }
+
+                } finally {
+                    br.close();
+                }
+            } catch (Exception e){
+                e.printStackTrace();
+                System.exit(1);
+            }
+            return files;
     }
 
     public void readIndexParamsFromFile(String indexParamFile){

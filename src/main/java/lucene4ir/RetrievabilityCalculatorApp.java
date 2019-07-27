@@ -29,9 +29,12 @@ public class RetrievabilityCalculatorApp {
     public RetrievabilityCalculatorParams p;
 
     // Private Properties
-    private String retrievabilityParamFile;
-    private HashMap<Integer, Double> docMap , qryMap;
     private double totalWeights;
+
+
+    // public properties
+    public String retrievabilityParamFile;
+    public HashMap<Integer, Double> docMap , qryMap;
 
     // Constructor Method
     public RetrievabilityCalculatorApp(String inputParameters) {
@@ -40,13 +43,11 @@ public class RetrievabilityCalculatorApp {
         qryMap = new HashMap<Integer, Double>();
     }
 
-
     private void displayMsgThenExit(String msg)
     {
         System.out.println(msg);
         System.exit(0);
     } // End Function
-
 
     private void readParamsFromFile() {
          /*
@@ -71,13 +72,11 @@ public class RetrievabilityCalculatorApp {
             p.c = 0;
     } // End Function
 
-
   /*  private void createShortQueryFile () throws Exception
     {
         Create Short Query File to be used by RetrievalAPP ( QryID - Query)
         put it in the same folder as input query file
         name it shortGram.out
-         *//*
         String qryFile , line , parts[];
         int slashLoc , maxLimit = 4;
         slashLoc = p.queryFile.lastIndexOf("/");
@@ -100,7 +99,6 @@ public class RetrievabilityCalculatorApp {
     } // End Function
 
     */
-
 
     private double calculateG(ArrayList<Double> rValues)
     {
@@ -179,7 +177,6 @@ public class RetrievabilityCalculatorApp {
     private double calculateR (int qryID , int rank)
     {
       //  Calculate Utility/Cost Function
-
         double result  , weight = 1;
         // If query weight is not exist weight = 1
         if (!p.queryWeightFile.isEmpty())
@@ -191,11 +188,11 @@ public class RetrievabilityCalculatorApp {
 
 
     private void readRetrievalResultsAndCalculateR() throws Exception {
-        /*
-        Read RetrievalAPP Results File
+
+        /*Read RetrievalAPP Results File
         Calculate Retrievability for Each document Line
-        Add the retrievability to docMap
-         */
+        Add the retrievability to docMap*/
+
         String line, parts[];
         int docid , qryid , rank ;
         double r = 1; // Default for document counter method (counting documents in .res file)
@@ -234,17 +231,29 @@ public class RetrievabilityCalculatorApp {
     } // End Function
 
 
+    private void close()
+    {
+        // Close function to release memory
+        docMap = null;
+        qryMap = null;
+    } // End Function
+
     private void initDocumentMap() throws Exception {
 
         // Initialize Document Hash MAP (docid , r = 0)
         IndexReader reader;
+        long docCount;
+        int docid;
         final String docIDField = Lucene4IRConstants.FIELD_DOCNUM;
         reader = DirectoryReader.open(FSDirectory.open(Paths.get(p.indexName)));
-        int docid = 0;
-        for (int i = 0; i < reader.maxDoc(); i++) {
+        docCount = reader.maxDoc();
+
+        for (int i = 0; i < docCount; i++)
+        {
             docid = Integer.parseInt(reader.document(i).get(docIDField));
             docMap.put(docid,0.0);
         }
+
         reader.close();
     } // End Function
 
@@ -257,6 +266,7 @@ public class RetrievabilityCalculatorApp {
             initQueryMap();
             readRetrievalResultsAndCalculateR();
             displayResults();
+            close();
         } catch (Exception e) {
             System.out.println(" caught a " + e.getClass() +
                     "\n with message: " + e.getMessage());
@@ -265,7 +275,7 @@ public class RetrievabilityCalculatorApp {
     } // End Function
 
     public static void main(String args[]) {
-        // Main (Mystro Function) - Coordinate the process
+        // RunExperimentsRetrievabilityCalculatorApp (Mystro Function) - Coordinate the process
         String inputParamFile;
 
         inputParamFile = args[0];
@@ -281,3 +291,4 @@ public class RetrievabilityCalculatorApp {
         public int   b , c;
     }
 }
+

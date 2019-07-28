@@ -26,7 +26,7 @@ public class IndexStatistics {
     General Input Parameters
     1- Field Name
      */
-    String fldName;
+    String fldName , indexName;
 
     /*
    Output Field Properties
@@ -62,16 +62,17 @@ public class IndexStatistics {
     private void displayResults()
     {
         // Display Results
-        String output = String.format( "Field Name : %s\n" +
-                        "------------------\n" +
-                        "1- Unique Terms Count = %d\n" +
-                        "2- Average Term Length = %f\n" +
-                        "3- Empty Terms Count = %d\n" +
-                        "4- Total Terms Count = %d\n" +
-                        "5- Documents Count = %d\n" ,
-                fldName, uniqueTermsCtr , avgTermLength ,
-                emptyTermsCtr , allTermsCtr , docsCtr);
-        System.out.println(output);
+
+        System.out.println("\nIndex Statistics");
+        System.out.println("--------------------");
+        System.out.println("Index : " + indexName);
+        System.out.println("Field Name : " + fldName);
+        System.out.println("1- Unique Terms Count = " + uniqueTermsCtr);
+        System.out.println(String.format("2- Average Term Length = %1.4f" , avgTermLength));
+        System.out.println("3- Empty Terms Count = " + emptyTermsCtr);
+        System.out.println("4- Total Terms Count = " + allTermsCtr);
+        System.out.println("5- Documents Count = " + docsCtr);
+
     } // End Function
 
 
@@ -113,13 +114,14 @@ public class IndexStatistics {
         reader.close();
     } // End Function
 
-    public void calculateIndexStatistics(String inFieldName , String indexName)
+    public void calculateStatistics(String inIndexName , String inFieldName )
     {
         // The RunExperimentsRetrievabilityCalculatorApp Mystro Function The Coordinate The Process of Statistics Calculation
         ArrayList<String> fieldNames = new ArrayList<String>();
 
         int numberOfFields;
         fldName = inFieldName;
+        indexName = inIndexName;
         try {
             openReader(indexName);
             if (fldName.isEmpty())
@@ -139,10 +141,19 @@ public class IndexStatistics {
                 iterateField();
                 displayResults();
             };
-
         } catch (IOException e) {
             System.out.println(" caught a " + e.getClass() +
                     "\n with message: " + e.getMessage());
         } // End Catch
     } // End Function
-} // End Function
+
+
+    public static void main(String[] args) {
+        String fldName = "raw" ,
+                indexName = "smallIndex";
+
+        IndexStatistics sts = new IndexStatistics();
+        sts.calculateStatistics(indexName , fldName);
+    } // End Main Function
+
+} // End Class

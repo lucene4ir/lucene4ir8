@@ -1,5 +1,21 @@
-package lucene4ir.Stats;
+/*
+This Class is Used to report some statistical information about a given Lucene4IR RetrievalApp result file
 
+ Output Parameters From Retrieval Results File
+    1- docMap  (DocID , Frequency )
+    2- QueryMap QryID , Frequency --> if Frequency < c
+    3- Total Number Of Queries
+    4- Number Of Queries Less Than c
+    5- Expected Number Of Results
+    6- Current Number Of Results
+    7- Number of missing results
+    8- Percentage of missing results
+
+
+Created By : Abdulaziz AlQatan - 21/07/2019
+ */
+
+package lucene4ir.Stats;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -10,21 +26,23 @@ import java.util.Map;
 
 public class RetrievalStatistics
 {
-
     /*
     Output Parameters From Retrieval Results File
     1- docMap  (DocID , Frequency )
     2- QueryMap QryID , Frequency --> if Frequency < c
     3- Total Number Of Queries
     4- Number Of Queries Less Than c
-    5- Expected Results
-    6- CurrentResults
+    5- Expected Number Of Results
+    6- Current Number Of Results
+    7- Number of missing results
+    8- Percentage of missing results
      */
 
     public HashMap<Integer, Integer> docMap, // (DocID , Frequency )
             qryMap; // QryID , Frequency --> if Frequency < c
 
-    public int totalQryCtr , limitedQryCtr , lineCtr;
+    public int totalQryCtr , limitedQryCtr , lineCtr , expectedResults;
+    public String inFile;
 
     private void resetOutput ()
     {
@@ -36,6 +54,21 @@ public class RetrievalStatistics
     }
     private void displayResults (String outDir) throws Exception
     {
+        // Display Statistics Results
+
+        // Display Output Parameters
+        System.out.println("\nRetrieval File Statistics");
+        System.out.println("-----------------------------");
+        System.out.println("Retrieval File : '" + inFile + "'");
+        System.out.println("Total Number of Retrieved Documents : " + docMap.size());
+        System.out.println("Total Queries = " + totalQryCtr);
+        System.out.println("Number Of Limited Queries < c : " + limitedQryCtr);
+        System.out.println("Expected Number Of Results : " + expectedResults);
+        System.out.println("Current Number Of Results : " + lineCtr);
+        System.out.println("Missing Results  = " + (expectedResults - lineCtr));
+        System.out.println(String.format("Missing Percentage = %%%2.2f",
+                (expectedResults - lineCtr) * 100.0 /  expectedResults));
+
         /*
         Display Results of Document Map and Query Map
         Output Query Map
@@ -71,11 +104,12 @@ public class RetrievalStatistics
         docMap = null;
     } // End Function
 
-    public void calculateRetrievalStatistics(String inFile , String outDir , int c)
+    public void calculateStatistics(String inputFile , String outDir , int c)
     {
         String line , parts[];
-        int qryID , docID , rank ,  qryCtr = 1 , oldQryID = 0 , expectedResults;
+        int qryID , docID , rank ,  qryCtr = 1 , oldQryID = 0;
 
+        inFile = inputFile;
         resetOutput();
         try {
             BufferedReader br = new BufferedReader(new FileReader(inFile));
@@ -115,25 +149,6 @@ public class RetrievalStatistics
             } // End While
             expectedResults = c * totalQryCtr;
 
-            String output = String.format(
-                            "\nStatistics of Retrieval File : '%s'\n" +
-                             "--------------------------------------------\n" +
-                            "Total Number of Retrieved Documents : %d\n" +
-                            "Total Queries = %d\n" +
-                            "Number Of Limited Queries < c : %d\n" +
-                            "Expected Number Of Results : %d\n" +
-                            "Current Results : %d\n" +
-                            "Missing Results  = %d\n" +
-                            "Missing Percentage = %%%2.2f",
-                            inFile ,
-                            docMap.size(),
-                            totalQryCtr,
-                            limitedQryCtr,
-                            expectedResults ,
-                            lineCtr,
-                            expectedResults - lineCtr ,
-                           (expectedResults - lineCtr) * 100.0 /  expectedResults );
-            System.out.println(output);
             displayResults(outDir);
             close();
         } // End Try
@@ -143,4 +158,9 @@ public class RetrievalStatistics
         } // End Catch
     } // End Function
 
+    public static void main(String[] args) {
+        String path = "out/result.res";
+        RetrievalStatistics sts = new RetrievalStatistics();
+        sts.calculateStatistics(path,"out" , 100);
+    } // End Main Function
 } // End Class

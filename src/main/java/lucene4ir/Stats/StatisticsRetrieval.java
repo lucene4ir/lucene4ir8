@@ -41,13 +41,14 @@ public class StatisticsRetrieval
     public HashMap<Integer, Integer> docMap, // (DocID , Frequency )
             qryMap; // QryID , Frequency --> if Frequency < c
 
-    public int totalQryCtr , limitedQryCtr , lineCtr , expectedResults;
+    public int totalQryCtr , limitedQryCtr , lineCtr , expectedResults , docCtr;
     public String inFile;
 
     private void resetOutput ()
     {
         totalQryCtr =0;
         limitedQryCtr = 0;
+        docCtr = 0;
         lineCtr = 0;
         docMap = new HashMap<Integer, Integer>();
         qryMap = new HashMap<Integer, Integer>();
@@ -157,8 +158,8 @@ public class StatisticsRetrieval
                 } // End Else
             } // End While
             expectedResults = c * totalQryCtr;
-
-            displayResults(outDir,c);
+            docCtr = docMap.size();
+           // displayResults(outDir,c);
             close();
         } // End Try
         catch (Exception e) {
@@ -168,7 +169,9 @@ public class StatisticsRetrieval
     } // End Function
 
     public static void main(String[] args) {
-        String path = "out/result.res";
+        String path;
+
+        path = args[0];
         StatisticsRetrieval sts = new StatisticsRetrieval();
         sts.calculateStatistics(path,"out" , 100);
     } // End Main Function

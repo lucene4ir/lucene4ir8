@@ -152,7 +152,6 @@ public class StatisticsIndex {
         String fldName = "raw" ,
                 indexName = "smallIndex";
 
-
         StatisticsIndex sts = new StatisticsIndex();
         sts.calculateStatistics(indexName , fldName);
     } // End Main Function

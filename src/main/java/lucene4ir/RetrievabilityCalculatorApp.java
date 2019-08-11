@@ -114,7 +114,7 @@ public class RetrievabilityCalculatorApp {
         int N;
         double r , numerator = 0 , denominator = 0 , result = 0;
 
-        N = rValues.size() - 1;
+        N = rValues.size() + 1;
         // Sort input R Values Ascendingly
         Collections.sort(rValues);
         for (int i = 1 ; i <= rValues.size() ; i++)
@@ -123,12 +123,12 @@ public class RetrievabilityCalculatorApp {
             numerator += (2 * i - N) * r;
             denominator += r;
         }
-        result = numerator / (++N * denominator);
+        result = numerator / (--N * denominator);
         return result;
     } // End Function
 
 
-    private void displayResults() throws Exception
+    private double displayResultsAndCalculateG() throws Exception
     {
         /*
         Display The Results as Needed For the whole Document Vector
@@ -159,17 +159,18 @@ public class RetrievabilityCalculatorApp {
         line = "The G Coefficient = " + G;
         System.out.println(line);
         pr.close();
+        return G;
     } // End Function
 
 
     private double costFunction (int rank )
     {
-        double result = 0;
+        double result = 1.0;
         if (rank <= p.c)
             // Gravity Exponential Function
-            result = 1.0 / Math.pow(rank,p.b);
+             result = 1.0 / Math.pow(rank,p.b);
             // Cumulative Boolean Function Based on Query Weight
-            // result = 1;
+             // result = 1.0;
         return result;
     } // End Function
 
@@ -178,11 +179,20 @@ public class RetrievabilityCalculatorApp {
     {
       //  Calculate Utility/Cost Function
         double result  , weight = 1;
+
         // If query weight is not exist weight = 1
         if (!p.queryWeightFile.isEmpty())
             weight = qryMap.get(qryID);
 
-        result = weight * costFunction(rank);
+        if (rank < 1)
+            // If Zero Rank r = 0
+            result = 0;
+        // If No Cost Don't Calculate it
+        else if (rank == 1 || p.b == 0)
+            result = weight;
+        else
+            result = weight * costFunction(rank);
+
         return result;
     } // End Function
 
@@ -203,7 +213,7 @@ public class RetrievabilityCalculatorApp {
             qryid = Integer.parseInt(parts[0]);
             docid = Integer.parseInt(parts[2]);
             rank = Integer.parseInt(parts[3]);
-            r = calculateR(qryid,rank);
+           // r = calculateR(qryid,rank);
             docMap.put(docid, docMap.get(docid) + r);
         } // End While
         br.close();
@@ -258,21 +268,26 @@ public class RetrievabilityCalculatorApp {
     } // End Function
 
 
-    public void calculate() {
+    public double calculate() {
+        double G = 0;
         // Mystro Method that coordinate the process
         try {
             readParamsFromFile();
             initDocumentMap();
             initQueryMap();
             readRetrievalResultsAndCalculateR();
-            displayResults();
+            G = displayResultsAndCalculateG();
             close();
         } catch (Exception e) {
             System.out.println(" caught a " + e.getClass() +
                     "\n with message: " + e.getMessage());
             System.exit(1);
         }
+        return G;
     } // End Function
+
+
+
 
     public static void main(String args[]) {
         // RunExperimentsRetrievabilityCalculatorApp (Mystro Function) - Coordinate the process

@@ -19,6 +19,8 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
 public class BigramGeneratorApp {
 
@@ -92,7 +94,7 @@ public class BigramGeneratorApp {
 
         // I have reservations about doing this - what if there are multiple leaves????
         // Initialization
-        reader = DirectoryReader.open(FSDirectory.open(Paths.get(p.indexName)));
+
         LeafReader leafReader = reader.leaves().get(0).reader();
         String currentTerm;
         long currentFreq;
@@ -168,6 +170,30 @@ public class BigramGeneratorApp {
         leafReader = null;
     } // End Function
 
+   /* private void outputUnigrams() throws Exception
+    {
+        *//*
+        Output UnigramMap ( Term , Weight )
+         *//*
+        String term , line;
+        int freq , ctr = 0;
+        Iterator it;
+
+        it = unigramMap.entrySet().iterator();
+        Map.Entry item;
+        PrintWriter outUnigrams = new PrintWriter(p.outFile);
+        while (it.hasNext())
+        {
+            item = (Map.Entry) it.next();
+            term = item.getKey().toString();
+            freq = Integer.parseInt(item.getValue().toString());
+            line = String.format("%d %s %d\n" , ++ctr , term , freq );
+            outUnigrams.write(line);
+        } // End While
+        outUnigrams.close();
+    } // End Function*/
+
+
     private void close()
     {
         // Close function to release memory
@@ -192,10 +218,12 @@ public class BigramGeneratorApp {
         readParamsFromFile(inputParameterFile);
         // create array with term list i.e. unigrams (term, count)
         createUnigramList(fldName);
+      //  outputUnigrams();
         // extract bigrams
         extractBigrams(fldName);
         reader.close();
         close();
+        System.out.println("Done Successfully");
     } // End Function
 
     public static void main (String args[])

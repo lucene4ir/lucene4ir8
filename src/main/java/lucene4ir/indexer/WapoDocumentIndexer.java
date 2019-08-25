@@ -185,7 +185,7 @@ public class WapoDocumentIndexer extends DocumentIndexer {
                 } // End IF
                 else
                 {
-                    fldValue = jElement.getAsJsonObject().get(fldName).toString();
+                    fldValue = jElement.getAsJsonObject().get(fldName).toString().replaceAll("\"","");
                     outLine += fldName + ": " + fldValue + ", ";
                 }
                 StaticAllValue += fldValue + " ";

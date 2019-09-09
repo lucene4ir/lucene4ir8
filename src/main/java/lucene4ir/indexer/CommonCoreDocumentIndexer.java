@@ -4,11 +4,15 @@
     URL : https://trec.nist.gov/data/core2017.html
 
    * Created by Abdulaziz on 16/03/2019.
-   * Edited by Abdulaziz AlQattan on 28/06/2019.
+   * Edited by Abdulaziz AlQattan on 09/09/2019.
 */
 
 package lucene4ir.indexer;
+import com.sun.deploy.security.SelectableSecurityManager;
 import lucene4ir.Lucene4IRConstants;
+import lucene4ir.utils.TokenAnalyzerMaker;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
@@ -20,6 +24,7 @@ import java.util.ArrayList;
 public class CommonCoreDocumentIndexer extends DocumentIndexer {
 
     // Properties
+
     Whitelist whiteList;
     private org.jsoup.nodes.Document jdoc;
     ArrayList<Field> fields;
@@ -38,28 +43,24 @@ public class CommonCoreDocumentIndexer extends DocumentIndexer {
 
             // *******************
 
-            whiteList.addTags("meta");
-            whiteList.addAttributes("meta","name" , "content");
-
-            // *******************
-
             whiteList.addTags("doc-id");
             whiteList.addAttributes("doc-id","id-string");
 
             // *******************
 
             whiteList.addTags("doc.copyright");
-            whiteList.addAttributes("doc.copyright","year" , "holder");
+            whiteList.addAttributes("doc.copyright","year");
+            whiteList.addAttributes("doc.copyright","holder");
 
             // *******************
 
             whiteList.addTags("classifier");
-            whiteList.addAttributes("doc.copyright","year" , "holder");
 
             // *******************
 
             whiteList.addTags("pubdata");
             whiteList.addAttributes("pubdata","name");
+            whiteList.addAttributes("pubdata","date.publication");
 
             whiteList.addTags("hl1");
 
@@ -74,8 +75,7 @@ public class CommonCoreDocumentIndexer extends DocumentIndexer {
         This Function is used to get the attribure value of a specific tag
         in a specific jsoup Document
          */
-        String selector =  TagName + "[" + AttributeName + "]";
-        return  jdoc.select(selector).attr(AttributeName) ;
+        return  jdoc.getElementsByTag(TagName).attr(AttributeName);
     } // End Function
     private String getFieldText(String TagName){
            /*
@@ -89,42 +89,16 @@ public class CommonCoreDocumentIndexer extends DocumentIndexer {
 
         return fieldText;
     } // End Function
-    private boolean isNumeric(String strNum) {
-       //  This Function is used to check whether an input string is numeric or not
-        try {
-            double d = Double.parseDouble(strNum);
-        } catch (NumberFormatException | NullPointerException nfe) {
-            return false;
-        }
-        return true;
-    } // End Function
-    private String getPubDatePart(String aPart)
-    {
-        // Return specific part (day - month - year ) of current publish date in jdoc
-       return jdoc.getElementsByAttributeValue("name", aPart).attr("content");
-    }; // End Function
+
     private String getPubDate()
     {
         /*
-        This function is Used to get the Publication Date Supposing that :
-        the value of content of element with (Key = name and value = publication_day_of_month) = Day
-        the value of content of element with (Key = name and value = publication_month) = month
-        the value of content of element with (Key = name and value = publication_year) = year
-
-        if any value (day - month - year) is empty or non-Numeric return empty string
+        This function is Used to get the Publication Date :
          */
-
-        String result = "" , aDay , aMonth , aYear;
-        aDay = getPubDatePart("publication_day_of_month");
-        if (!isNumeric(aDay))
-            return result;
-        aMonth = getPubDatePart("publication_month");
-        if (!isNumeric(aMonth))
-            return result;
-        aYear = getPubDatePart("publication_year");
-        if (!isNumeric(aYear))
-            return result;
-        result = aDay + '/' + aMonth + "/" + aYear;
+        String result = "" ;
+        result = getFieldAttribute( "pubdata" , "date.publication");
+        if (!result.isEmpty())
+            result = result.substring(0,4) + "/" + result.substring(4,6) + "/" + result.substring(6,8);
         return result;
     } // End Function
 
@@ -162,6 +136,23 @@ public class CommonCoreDocumentIndexer extends DocumentIndexer {
         addFieldToDocument(Lucene4IRConstants.FIELD_BODY,' ');
         addFieldToDocument(Lucene4IRConstants.FIELD_RAW,' ');
     } // End Function
+
+    private Field getBigramField(String all)
+    {
+        String tokenFilterFile = "params/index/TokenFilterFile_Bigram.xml";
+        String fldName = "biraw";
+        Field result;
+        TokenStream ts;
+        TokenAnalyzerMaker tam = new TokenAnalyzerMaker();
+        Analyzer an = tam.createAnalyzer(tokenFilterFile);
+        ts= an.tokenStream(fldName,all);
+
+        if(indexPositions)
+             result = new lucene4ir.indexer.TermVectorEnabledTextField(fldName,ts);
+        else
+            result = new TextField(fldName,ts);
+        return result;
+    }
 
     // Constructor Method
     public CommonCoreDocumentIndexer(String indexPath, String tokenFilterFile, boolean positional){
@@ -258,11 +249,14 @@ public class CommonCoreDocumentIndexer extends DocumentIndexer {
            // Create New Document
             doc = new Document();
             // Move from Values Array to Fields Array and add to a new Document to Preparre it
+            // Check Whether to add biGram RAW Field
+
             for (short i = 0 ; i < values.length ; i++)
             {
                 fields.get(i).setStringValue(values[i]);
                 doc.add(fields.get(i));
             }
+            doc.add(getBigramField(all));
            System.out.println(String.format("Adding document: %s Title %s" , docnum , title));
            // Add the resultant document to the Indexer
            addDocumentToIndex(doc);

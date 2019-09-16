@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<retrievalParams>
+    <indexName>Core17BigramOnlyIndex</indexName>
+    <queryFile>out/Core17/General/Queries/300K.qry</queryFile>
+    <maxResults>100</maxResults>
+    <model>bm25</model>
+    <b>0.1</b>
+    <k>1.2</k>
+    <resultFile>out/Core17/BigramIndex/300K/C100/CombinedgramFilter/result0.1.res</resultFile>
+    <tokenFilterFile>params/index/TokenFilterFile_Combinedgram.xml</tokenFilterFile>
+    <runTag>Fred</runTag>
+    <!--<fieldsFile>params/fields.xml</fieldsFile>-->
+</retrievalParams>

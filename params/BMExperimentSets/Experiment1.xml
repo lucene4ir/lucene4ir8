@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<retrievalParams>
+
+    <!--Input Parameters-->
+    <indexName>Core17BigramOnlyIndex</indexName>
+    <maxResults>100</maxResults>
+   <!-- <queryFile>out/Core17/General/Queries/300K.qry</queryFile>-->
+    <queryFile></queryFile>
+    <tokenFilterFile>params/index/TokenFilterFile_Combinedgram.xml</tokenFilterFile>
+
+   <!-- Parameter Files -->
+    <retrievalParamsFile>params/temp_retrieval_params.xml</retrievalParamsFile>
+    <retrievabilityParamsFile>params/temp_retrievability_calculator_params.xml</retrievabilityParamsFile>
+    <!--Output Parameters-->
+    <outputDir></outputDir>
+
+</retrievalParams>

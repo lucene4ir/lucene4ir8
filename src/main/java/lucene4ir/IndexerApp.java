@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
-import utils.CrossDirectoryClass;
+import lucene4ir.utils.CrossDirectoryClass;
 import lucene4ir.indexer.*;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.store.FSDirectory;
@@ -29,7 +29,8 @@ public class IndexerApp {
 
 
     private enum DocumentModel {
-        CACM, CLUEWEB, TRECNEWS, TRECCC, TRECAQUAINT, TRECWEB, TRECTIPSTER, PUBMED , COMMONCORE , JSONLINE
+        CACM, CLUEWEB, TRECNEWS, TRECCC, TRECAQUAINT,
+        TRECWEB, TRECTIPSTER, PUBMED , COMMONCORE , WAPO
     }
 
     private DocumentModel docModel;
@@ -104,11 +105,10 @@ public class IndexerApp {
                 di = new CommonCoreDocumentIndexer(p.indexName, p.tokenFilterFile, p.recordPositions);
                 break;
 
-            case JSONLINE:
-                System.out.println("JSONLINE");
-                di = new JsonLineDocumentIndexer(p.indexName, p.tokenFilterFile, p.recordPositions);
+            case WAPO:
+                System.out.println("WAPO");
+                di = new WapoDocumentIndexer(p.indexName, p.tokenFilterFile, p.recordPositions);
                 break;
-
 
             default:
                 System.out.println("Default Document Parser");
@@ -133,8 +133,8 @@ public class IndexerApp {
 
         // check whether the input filename is a folder
         if (new File(filename).isDirectory()) {
-            cd = new CrossDirectoryClass(filename);
-            files = cd.crossDirectory();
+            cd = new CrossDirectoryClass();
+            files = cd.crossDirectory(filename,true);
         }
         else
             try {
@@ -158,7 +158,9 @@ public class IndexerApp {
 
     public void readIndexParamsFromFile(String indexParamFile){
         try {
+
             p = JAXB.unmarshal(new File(indexParamFile), IndexParams.class);
+
         } catch (Exception e){
             e.printStackTrace();
             System.exit(1);
@@ -202,11 +204,7 @@ public class IndexerApp {
 
     }
 
-
-
     public static void main(String []args) {
-
-
         String indexParamFile = "";
 
         try {
@@ -230,8 +228,6 @@ public class IndexerApp {
         }
         indexer.finished();
         System.out.println("Done building Index");
-
-
 
     }
 

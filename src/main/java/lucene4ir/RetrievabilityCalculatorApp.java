@@ -34,12 +34,13 @@ public class RetrievabilityCalculatorApp {
 
     // public properties
     public String retrievabilityParamFile;
-    public HashMap<Integer, Double> docMap , qryMap;
+    public HashMap<String, Double> docMap;
+    public HashMap<Integer, Double> qryMap;
 
     // Constructor Method
     public RetrievabilityCalculatorApp(String inputParameters) {
         retrievabilityParamFile = inputParameters;
-        docMap = new HashMap<Integer, Double>();
+        docMap = new HashMap<String, Double>();
         qryMap = new HashMap<Integer, Double>();
     }
 
@@ -135,10 +136,9 @@ public class RetrievabilityCalculatorApp {
         Sort r Values Ascendingly
         Calculate G Coefficient
         */
-        String line;
+        String line , docID;
         Map.Entry item;
         Iterator it = docMap.entrySet().iterator();
-        int docID ;
         double r , G;
         ArrayList<Double> rValues = new ArrayList<Double>();
 
@@ -146,10 +146,10 @@ public class RetrievabilityCalculatorApp {
         while (it.hasNext()) {
             item = (Map.Entry) it.next();
             r = (double) item.getValue();
-            docID = (int) item.getKey();
+            docID =  item.getKey().toString();
             rValues.add(r);
             // Format output line
-            line = String.format("%d %f\n", docID, r);
+            line = String.format("%s %f\n", docID, r);
             // Display Line
             pr.print(line);
             System.out.print(line);
@@ -169,8 +169,6 @@ public class RetrievabilityCalculatorApp {
         if (rank <= p.c)
             // Gravity Exponential Function
              result = 1.0 / Math.pow(rank,p.b);
-            // Cumulative Boolean Function Based on Query Weight
-             // result = 1.0;
         return result;
     } // End Function
 
@@ -203,18 +201,22 @@ public class RetrievabilityCalculatorApp {
         Calculate Retrievability for Each document Line
         Add the retrievability to docMap*/
 
-        String line, parts[];
-        int docid , qryid , rank ;
+        String line, parts[] , docid;
+        int  qryid , rank ;
         double r = 1; // Default for document counter method (counting documents in .res file)
 
         BufferedReader br = new BufferedReader(new FileReader(p.resFile));
         while ((line = br.readLine()) != null) {
             parts = line.split(" ", 5);
-            qryid = Integer.parseInt(parts[0]);
-            docid = Integer.parseInt(parts[2]);
-            rank = Integer.parseInt(parts[3]);
-           // r = calculateR(qryid,rank);
-            docMap.put(docid, docMap.get(docid) + r);
+            docid = parts[2].trim();
+            //  qryid = Integer.parseInt(parts[0]);
+            //   rank = Integer.parseInt(parts[3]);
+            //   r = calculateR(qryid,rank);
+            if (docMap.containsKey(docid))
+                docMap.put(docid, docMap.get(docid) + r);
+            else
+                System.out.println(docid);
+
         } // End While
         br.close();
     } // End Function
@@ -253,14 +255,14 @@ public class RetrievabilityCalculatorApp {
         // Initialize Document Hash MAP (docid , r = 0)
         IndexReader reader;
         long docCount;
-        int docid;
+        String docid;
         final String docIDField = Lucene4IRConstants.FIELD_DOCNUM;
         reader = DirectoryReader.open(FSDirectory.open(Paths.get(p.indexName)));
         docCount = reader.maxDoc();
 
         for (int i = 0; i < docCount; i++)
         {
-            docid = Integer.parseInt(reader.document(i).get(docIDField));
+            docid = reader.document(i).get(docIDField);
             docMap.put(docid,0.0);
         }
 

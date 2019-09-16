@@ -1,4 +1,4 @@
-package utils;
+package lucene4ir.utils;
 /*
 This Class is used to cross all files in a directory even within inner directories
  */
@@ -10,25 +10,22 @@ public  class CrossDirectoryClass {
      public int fileCount, // The Number of crossed files
                          folderCount, // The Number of crossed folders
                 maxFileDig; // The Maximum Number of files to take from each directory
-    public String path; // The path to Cross
-    public boolean crossInner ; // identify whether to cross inner directories or not
 
      private ArrayList<String> fileList ; // The Resultant list of file names in a directory
 
 
-    public CrossDirectoryClass(String inPath)
+    public CrossDirectoryClass()
     {
         // Constructor Method
-        // Initialize Main Variables and Counts
+        // Initialize RunExperimentsRetrievabilityCalculatorApp Variables and Counts
         fileCount = 0;
         folderCount = 0;
         fileList =  new ArrayList<String>() ;
-        path = inPath;
         maxFileDig = 0;
-        crossInner = true;
+
     }
 
-    private  void listDirectory(File aDir) {
+    private  void listDirectory(File aDir , boolean crossInner) {
         /*
         This is a recursive function to traverse all folders and all files in a Given Directory
         and fill the name of files in the input tempList
@@ -43,7 +40,7 @@ public  class CrossDirectoryClass {
                 if (crossInner)
                 {
                     folderCount++;
-                    listDirectory(aFile);
+                    listDirectory(aFile,crossInner);
                 } // End if (crossInner)
             } // End (aFile.isDirectory()
             else {
@@ -55,7 +52,7 @@ public  class CrossDirectoryClass {
             }
     }
 
-    public ArrayList<String> crossDirectory()
+    public ArrayList<String> crossDirectory(String inPath , boolean crossInner)
     {
         /*
         This function is used to traverse all files in the input Directory path
@@ -63,10 +60,10 @@ public  class CrossDirectoryClass {
         MaxFileDig for identifying the maximum number of files to take from each directory or else zero = all files
         */
 
-        File directory = new File(path);
+        File directory = new File(inPath);
         // check  whether the directory is exist of not
         if (directory.exists())
-            listDirectory(directory);
+            listDirectory(directory , crossInner);
         else
             System.out.println("Directory is not Found");
         return fileList;

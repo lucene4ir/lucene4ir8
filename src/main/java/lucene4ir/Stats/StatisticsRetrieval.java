@@ -38,8 +38,8 @@ public class StatisticsRetrieval
     8- Percentage of missing results
      */
 
-    public HashMap<Integer, Integer> docMap, // (DocID , Frequency )
-            qryMap; // QryID , Frequency --> if Frequency < c
+    public HashMap<String, Integer> docMap; // (DocID , Frequency )
+    public HashMap<Integer, Integer> qryMap; // QryID , Frequency --> if Frequency < c
 
     public int totalQryCtr , limitedQryCtr , lineCtr , expectedResults , docCtr;
     public String inFile;
@@ -50,7 +50,7 @@ public class StatisticsRetrieval
         limitedQryCtr = 0;
         docCtr = 0;
         lineCtr = 0;
-        docMap = new HashMap<Integer, Integer>();
+        docMap = new HashMap<String, Integer>();
         qryMap = new HashMap<Integer, Integer>();
     }
     private void displayResults (String outDir,int c) throws Exception
@@ -112,7 +112,8 @@ public class StatisticsRetrieval
     public void calculateStatistics(String inputFile , String outDir , int c)
     {
         String line , parts[];
-        int qryID , docID , rank ,  qryCtr = 1 , oldQryID = 0;
+        int qryID  , rank ,  qryCtr = 1 , oldQryID = 0;
+        String docID;
 
         inFile = inputFile;
         resetOutput();
@@ -127,7 +128,7 @@ public class StatisticsRetrieval
                     return;
                 }
                 qryID = Integer.parseInt(parts[0]);
-                docID = Integer.parseInt(parts[2]);
+                docID = parts[2];
                 rank = Integer.parseInt(parts[3]);
 
                 // Process Document ID

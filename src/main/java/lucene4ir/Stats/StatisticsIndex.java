@@ -12,11 +12,15 @@ Created By : Abdulaziz AlQatan - 21/07/2019
 
 package lucene4ir.Stats;
 
-import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.IndexReader;
+import lucene4ir.Lucene4IRConstants;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.index.*;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
@@ -75,9 +79,9 @@ public class StatisticsIndex {
 
     } // End Function
 
-
     private void iterateField() throws IOException {
-        // Iterate through the given Field (fldName) and calculate the statistics for its terms
+        // Iterate through the given Field (fldName)
+        // and calculate general statistics for its terms
         String currentTerm;
         ArrayList<String> terms = new ArrayList<String>(); // Record All
         ArrayList<String> replicatedTerms = new ArrayList<String>();
@@ -114,7 +118,7 @@ public class StatisticsIndex {
         reader.close();
     } // End Function
 
-    public void calculateStatistics(String inIndexName , String inFieldName )
+    public void calculateGeneralStatistics(String inIndexName , String inFieldName )
     {
         // The RunExperimentsRetrievabilityCalculatorApp Mystro Function The Coordinate The Process of Statistics Calculation
         ArrayList<String> fieldNames = new ArrayList<String>();
@@ -147,13 +151,59 @@ public class StatisticsIndex {
         } // End Catch
     } // End Function
 
+    public void calculateDocumentsStatistics (String inIndexName , String inFieldName , String outputPath)
+    {
+        String line , currentTerm , docID;
+        int termCount;
 
+        long totalTerms = 0;
+        fldName = inFieldName;
+        indexName = inIndexName;
+        try {
+            openReader(indexName);
+
+            PrintWriter pr = new PrintWriter(outputPath);
+            for (int i = 0 ; i < reader.maxDoc() ; i++)
+            {
+               /* LeafReader leafReader = reader.leaves().get(0).reader();
+                Terms terms = leafReader.terms(fldName);
+                TermsEnum te = terms.iterator();
+                BytesRef term;
+                while ((term = te.next()) != null) {
+                    System.out.println(term.utf8ToString() + " DF: " + te.docFreq() + " CF: " + te.totalTermFreq());
+
+
+               Document doc = reader.document(0);
+               IndexableField fld = doc.getField(fldName);
+                System.out.println(reader.document(0).getValues(fldName));
+                Fields flds = MultiFields.getFields(reader);
+
+                */
+                currentTerm = reader.document(i).get(fldName).toString();
+                docID = reader.document(i).get(Lucene4IRConstants.FIELD_DOCNUM);
+                termCount = currentTerm.length() - currentTerm.replaceAll(" ","").length() + 1;
+                totalTerms += termCount;
+                line = docID + " " + termCount + "\n";
+                System.out.print(line);
+                pr.write(line);
+            } // End For
+            line = String.format("\nIndex : %s\nField : %s\nTotal Terms : %d\nAverageLength : %1.3f" ,
+                                indexName , fldName , totalTerms , totalTerms * 1.0 / reader.maxDoc() ) ;
+            System.out.println(line);
+            pr.close();
+            reader.close();
+        } catch (IOException e) {
+            System.out.println(" caught a " + e.getClass() +
+                    "\n with message: " + e.getMessage());
+        } // End Catch
+
+    }
     public static void main(String[] args) {
         String fldName = "raw" ,
-                indexName = "smallIndex";
+                indexName = "Core17SeparatedGramIndex";
 
         StatisticsIndex sts = new StatisticsIndex();
-        sts.calculateStatistics(indexName , fldName);
+        sts.calculateDocumentsStatistics(indexName , fldName,"out/separatedGramIndex.sts");
     } // End Main Function
 
 } // End Class

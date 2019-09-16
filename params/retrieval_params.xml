@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <retrievalParams>
-    <indexName>index</indexName>
-    <queryFile>data/cacm/title.query</queryFile>
+    <indexName>Core17CombinedGramIndex</indexName>
+    <queryFile>out\Core17\General\Queries\300K.qry</queryFile>
     <maxResults>100</maxResults>
     <model>bm25</model>
-    <b>0.75</b>
-    <resultFile>data/cacm/bm25_results.res</resultFile>
-    <tokenFilterFile>params/index/example_01.xml</tokenFilterFile>
+    <b>0.4</b>
+    <k>1.2</k>
+    <resultFile>out\newResCombinedIndex300K100C0.4.res</resultFile>
+    <tokenFilterFile>params/index/TokenFilterFile_Combinedgram.xml</tokenFilterFile>
+  <!--  <tokenFilterFile>params/index/example_03.xml</tokenFilterFile>-->
+
     <runTag>Fred</runTag>
 </retrievalParams>

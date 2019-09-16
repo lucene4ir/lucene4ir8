@@ -3,18 +3,18 @@
 
     <!--Inputs-->
     <!-- The Index to Read From-->
-    <indexName>index</indexName>
+    <indexName>bigramIndex</indexName>
 
     <!--output File-->
     <!--DocID - r-->
-    <retFile>out/RetrievabilityCalculatorList.txt</retFile>
+    <retFile>out\bigram\G\300K\B\QueryWeight-Cumulative\RCResults0.7.ret</retFile>
 
     <!--Other RetrievalApp Params -->
-    <queryWeightFile>out/Qry Weight.txt</queryWeightFile>
-    <resFile>out/Result.res</resFile>
+    <queryWeightFile>out\bigram\G\300K\queryWeights.out</queryWeightFile>
+    <resFile>out\bigram\G\300K\B\result0.7.res</resFile>
 
    <!-- Cost Function Params-->
-    <b>4</b>
-    <c>50</c>
+    <b>0.5</b>
+    <c>100</c>
 
 </RetrievabilityCalculatorParams>

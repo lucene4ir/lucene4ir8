@@ -4,7 +4,7 @@
     URL : https://trec.nist.gov/data/core2017.html
 
    * Created by Abdulaziz on 16/03/2019.
-   * Edited by Abdulaziz AlQattan on 09/09/2019.
+   * Edited by Abdulaziz AlQattan on 28/06/2019.
 */
 
 package lucene4ir.indexer;
@@ -24,7 +24,7 @@ import java.util.ArrayList;
 public class CommonCoreDocumentIndexer extends DocumentIndexer {
 
     // Properties
-
+    public boolean fielded = false;
     Whitelist whiteList;
     private org.jsoup.nodes.Document jdoc;
     ArrayList<Field> fields;
@@ -256,7 +256,8 @@ public class CommonCoreDocumentIndexer extends DocumentIndexer {
                 fields.get(i).setStringValue(values[i]);
                 doc.add(fields.get(i));
             }
-            doc.add(getBigramField(all));
+            if (fielded)
+                doc.add(getBigramField(all));
            System.out.println(String.format("Adding document: %s Title %s" , docnum , title));
            // Add the resultant document to the Indexer
            addDocumentToIndex(doc);

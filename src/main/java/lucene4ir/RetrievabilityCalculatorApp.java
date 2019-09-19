@@ -67,8 +67,6 @@ public class RetrievabilityCalculatorApp {
             displayMsgThenExit("Result File Parameter is Missing");
       /*  if (p.queryFile.toString().isEmpty())
             displayMsgThenExit("Query File Parameter is Missing");*/
-        if (p.b < 1)
-            p.b = 0;
         if (p.c < 1)
             p.c = 0;
     } // End Function
@@ -209,9 +207,13 @@ public class RetrievabilityCalculatorApp {
         while ((line = br.readLine()) != null) {
             parts = line.split(" ", 5);
             docid = parts[2].trim();
-            //  qryid = Integer.parseInt(parts[0]);
-            //   rank = Integer.parseInt(parts[3]);
-            //   r = calculateR(qryid,rank);
+
+            // Document Counter Lines
+            qryid = Integer.parseInt(parts[0]);
+            rank = Integer.parseInt(parts[3]);
+            r = calculateR(qryid,rank);
+
+            // End Document Counter Lines
             if (docMap.containsKey(docid))
                 docMap.put(docid, docMap.get(docid) + r);
             else
@@ -265,10 +267,8 @@ public class RetrievabilityCalculatorApp {
             docid = reader.document(i).get(docIDField);
             docMap.put(docid,0.0);
         }
-
         reader.close();
     } // End Function
-
 
     public double calculate() {
         double G = 0;
@@ -288,9 +288,6 @@ public class RetrievabilityCalculatorApp {
         return G;
     } // End Function
 
-
-
-
     public static void main(String args[]) {
         // RunExperimentsRetrievabilityCalculatorApp (Mystro Function) - Coordinate the process
         String inputParamFile;
@@ -305,7 +302,9 @@ public class RetrievabilityCalculatorApp {
     static
     public class RetrievabilityCalculatorParams {
         public String indexName , retFile ,resFile , queryWeightFile ;
-        public int   b , c;
+        public int    c;
+        public float b;
+
     }
 }
 

@@ -1,6 +1,5 @@
 package lucene4ir;
 
-import com.sun.deploy.security.SelectableSecurityManager;
 import lucene4ir.Stats.StatisticsRetrievabilityCalculator;
 import lucene4ir.Stats.StatisticsRetrieval;
 import lucene4ir.utils.CrossDirectoryClass;
@@ -20,6 +19,15 @@ public class RunExperimentSet {
 
     private void fillAutoParameters()
     {
+        /*
+        Fill Parameters Automatically
+        Fill QueryFile based on Max Results
+        if Max Results = 1000 - Query 50
+        else Query 300K
+        + fill The outputDir Automatically based on MaxResults & IndexName
+         Sample OutputDir
+         out\Core17\UnigramIndex\50\C1000\CombinedgramFilter
+         */
         String qryCount , indexFolder = "";
         if (p.maxResults.equals("1000"))
         {
@@ -40,12 +48,10 @@ public class RunExperimentSet {
             indexFolder = "CombinedIndex";
         else  if (p.indexName.equals("Core17FieldedIndex"))
             indexFolder = "FieldedIndex";
-
         //   Sample Output
         //   out\Core17\UnigramIndex\50\C1000\CombinedgramFilter
         p.outputDir = "out/Core17/" + indexFolder + qryCount + "CombinedgramFilter";
     }
-
     private boolean readParamsFromFile(String paramFile) throws Exception
 
     {
@@ -94,15 +100,14 @@ public class RunExperimentSet {
         } // End Else
     } // End Function
 
-    private void runRCExperiment (String b)
+    private void runRCExperiment (String b , String retType)
     {
         // Run Retrievability Calculator Experiments for given B Value
         String outFileName;
-
         XMLTextParser parser = new XMLTextParser(p.retrievabilityParamsFile);
         outFileName = p.outputDir + "/result" + b + ".res";
         parser.setTagValue("resFile",outFileName);
-        outFileName = p.outputDir +  "/RCResults" + b + ".ret";
+        outFileName = p.outputDir + retType +  "/RCResults" + b + ".ret";
         parser.setTagValue("retFile",outFileName);
       //  parser.setTagValue("queryWeightFile",queryWeightFile);
         parser.setTagValue("indexName",p.indexName);
@@ -114,16 +119,17 @@ public class RunExperimentSet {
 
     private String runRetrievalStatistics (String b)
     {
+
         StatisticsRetrieval sts = new StatisticsRetrieval();
         String outFileName = p.outputDir + "/result" + b + ".res";
         sts.calculateStatistics(outFileName,"",100);
         return String.format("%s %d %d %d\n",b , sts.lineCtr , sts.docCtr , sts.limitedQryCtr);
     }
     
-    private String runRCStatistics (String b)
+    private String runRCStatistics (String b , String retType)
     {
         StatisticsRetrievabilityCalculator sts = new StatisticsRetrievabilityCalculator();
-        String outFileName = p.outputDir + "/RCResults" + b + ".ret";
+        String outFileName = p.outputDir + retType +  "/RCResults" + b + ".ret";
         sts.calculateStatistics(outFileName);
         return String.format("%s %1.6f %d %d %1.4f %1.4f\n",b ,sts.G , sts.nonZeroDocCtr , sts.zeroDocCtr , sts.sum , sts.avg );
     }
@@ -194,27 +200,28 @@ public class RunExperimentSet {
     {
         // This function is used to process the whole experiment Set
       //  double bv[] = {0.1 , 0.2 , 0.25 , 0.3 , 0.35 , 0.4 , 0.45 , 0.5 , 0.6 , 0.7 , 0.8 , 0.9 , 0.95 , 0.99 };
-        String b , resSts = "" , retSts = "" , performanceValues = "" , bashLines = "";
+        String b , resSts = "" , retSts = "" , performanceValues = "" , bashLines = "" , retType = "";
 
             for (int i = 1; i < 10; i++) {
               //  b = String.valueOf(bv[i]);
                 b = "0." + i;
                 // *** Single Experiment
-                runRetrievalExperiment(b);
-                runRCExperiment(b);
+              //  runRetrievalExperiment(b);
+                retType = "/GravityWeightB0.5C100"; // "/Document Counter"
+                runRCExperiment(b,retType);
 
                 // *** Statistics ***
-                resSts += runRetrievalStatistics(b);
-                retSts += runRCStatistics(b);
+              //  resSts += runRetrievalStatistics(b);
+                retSts += runRCStatistics(b,retType);
 
                 // *** Perfoemance Values ***
-                bashLines += getTrecEvalLine(b);
+              //  bashLines += getTrecEvalLine(b);
 
             } // End For
             // Print output Files
-            printOutput(p.outputDir + "/res.Sts" , resSts);
-            printOutput(p.outputDir + "/ret.Sts" , retSts);
-            printOutput(p.outputDir + "/bash.sh" , bashLines);
+         //   printOutput(p.outputDir + "/res.Sts" , resSts);
+            printOutput(p.outputDir + retType + "/ret.Sts" , retSts);
+         //   printOutput(p.outputDir + "/bash.sh" , bashLines);
 
     } // End Function
 
@@ -229,7 +236,7 @@ public class RunExperimentSet {
                if (re.readParamsFromFile(file))
             {
                 re.processExperimentSet();
-               // re.printPerformanceValues();
+              //  re.printPerformanceValues();
                 System.out.println("Experiment " + file + " is done successfully");
             }
             else

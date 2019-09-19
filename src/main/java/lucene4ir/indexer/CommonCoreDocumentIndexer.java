@@ -8,7 +8,6 @@
 */
 
 package lucene4ir.indexer;
-import com.sun.deploy.security.SelectableSecurityManager;
 import lucene4ir.Lucene4IRConstants;
 import lucene4ir.utils.TokenAnalyzerMaker;
 import org.apache.lucene.analysis.Analyzer;
@@ -24,7 +23,7 @@ import java.util.ArrayList;
 public class CommonCoreDocumentIndexer extends DocumentIndexer {
 
     // Properties
-    public boolean fielded = false;
+    public boolean fielded = true;
     Whitelist whiteList;
     private org.jsoup.nodes.Document jdoc;
     ArrayList<Field> fields;

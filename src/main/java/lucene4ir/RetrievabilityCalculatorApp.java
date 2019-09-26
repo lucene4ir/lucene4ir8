@@ -188,13 +188,10 @@ public class RetrievabilityCalculatorApp {
             result = weight;
         else
             result = weight * costFunction(rank);
-
         return result;
     } // End Function
 
-
     private void readRetrievalResultsAndCalculateR() throws Exception {
-
         /*Read RetrievalAPP Results File
         Calculate Retrievability for Each document Line
         Add the retrievability to docMap*/
@@ -209,9 +206,11 @@ public class RetrievabilityCalculatorApp {
             docid = parts[2].trim();
 
             // Document Counter Lines
-            qryid = Integer.parseInt(parts[0]);
-            rank = Integer.parseInt(parts[3]);
-            r = calculateR(qryid,rank);
+            if (p.retType.equals("Gravity")) {
+                qryid = Integer.parseInt(parts[0]);
+                rank = Integer.parseInt(parts[3]);
+                r = calculateR(qryid, rank);
+            } // End if
 
             // End Document Counter Lines
             if (docMap.containsKey(docid))
@@ -301,7 +300,7 @@ public class RetrievabilityCalculatorApp {
     @XmlRootElement(name = "RetrievabilityCalculatorParams")
     static
     public class RetrievabilityCalculatorParams {
-        public String indexName , retFile ,resFile , queryWeightFile ;
+        public String indexName , retFile ,resFile , queryWeightFile , retType;
         public int    c;
         public float b;
 

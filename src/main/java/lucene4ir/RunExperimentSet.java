@@ -15,7 +15,8 @@ public class RunExperimentSet {
             biFilter = "params/index/p.tokenFilterFile_Bigram.xml",
             uniFilter = "params/index/p.tokenFilterFile_Unigram.xml" ,
             combinedFilter = "params/index/p.tokenFilterFile_Combinedgram.xml" ,
-            tokenFilterFile = combinedFilter;
+            tokenFilterFile = combinedFilter,
+            retType;
 
     private void fillAutoParameters()
     {
@@ -28,42 +29,35 @@ public class RunExperimentSet {
          Sample OutputDir
          out\Core17\UnigramIndex\50\C1000\CombinedgramFilter
          */
-        String qryCount , indexFolder = "";
+        String qryCount , indexFolder , C;
+
+        retType = "";
+        if (p.exType.equals("Performance"))
+            p.maxResults = "1000";
+
         if (p.maxResults.equals("1000"))
         {
-            p.queryFile = "out/Core17/General/Queries/50.qry";
-            qryCount = "/50/C1000/";
+            qryCount = "50";
+            C = "C1000";
         } // End if
         else
         {
-            p.queryFile = "out/Core17/General/Queries/300K.qry";
-            qryCount = "/300K/C100/";
+            qryCount = "300K";
+            C = "C100";
         } // End else
-
-        if (p.indexName.equals("Core17UnigramIndex"))
-            indexFolder = "UnigramIndex";
-        else  if (p.indexName.equals("Core17BigramOnlyIndex"))
-            indexFolder = "BigramIndex";
-        else  if (p.indexName.equals("Core17CombinedIndex"))
-            indexFolder = "CombinedIndex";
-        else  if (p.indexName.equals("Core17FieldedIndex"))
-            indexFolder = "FieldedIndex";
+        p.queryFile = String.format("out/%s/Queries/%s.qry" , p.corpus,qryCount);
+        indexFolder = p.indexName;
+        p.indexName = p.corpus + p.indexName;
         //   Sample Output
         //   out\Core17\UnigramIndex\50\C1000\CombinedgramFilter
-        p.outputDir = "out/Core17/" + indexFolder + qryCount + "CombinedgramFilter";
+        p.outputDir = String.format("out/%s/%s/%s/%s/CombinedgramFilter" ,
+                p.corpus , indexFolder , qryCount , C);
     }
-    private boolean readParamsFromFile(String paramFile) throws Exception
-
+    private void readParamsFromFile(String paramFile) throws Exception
     {
         // Read All Parameters and check that all of them are true
-        boolean valid;
-            p = JAXB.unmarshal(new File(paramFile), ExperimentSetParams.class);
-           /* valid =  !( p.maxResults.isEmpty() || p.indexName.isEmpty() ||
-                    p.outputDir.isEmpty() || p.queryFile.isEmpty()
-                    || p.tokenFilterFile.isEmpty());
-            if (valid)*/
-           fillAutoParameters();
-            return true;
+        p = JAXB.unmarshal(new File(paramFile), ExperimentSetParams.class);
+       fillAutoParameters();
     } // End Function
 
     private void printOutput (String outPath , String outText) throws Exception
@@ -78,7 +72,6 @@ public class RunExperimentSet {
         String outFileName;
         FieldedRetrievalApp fRetApp;
         RetrievalApp retApp;
-
 
         XMLTextParser parser = new XMLTextParser(p.retrievalParamsFile);
         outFileName = p.outputDir + "/result" + b + ".res";
@@ -100,18 +93,30 @@ public class RunExperimentSet {
         } // End Else
     } // End Function
 
-    private void runRCExperiment (String b , String retType)
+    private String getRetTypeFolder()
+    {
+        /*   exType (DocumentCounter) = "/DocumentCounter";*/
+        /* exType (Gravity) = "/GravityWeightB0.5C100";*/
+        String result = "";
+        if (retType == "Gravity")
+            result =   "/GravityWeightB0.5C100";
+        else
+            result =   "/DocumentCounter";
+        return result;
+    }
+    private void runRCExperiment (String b)
     {
         // Run Retrievability Calculator Experiments for given B Value
         String outFileName;
         XMLTextParser parser = new XMLTextParser(p.retrievabilityParamsFile);
         outFileName = p.outputDir + "/result" + b + ".res";
         parser.setTagValue("resFile",outFileName);
-        outFileName = p.outputDir + retType +  "/RCResults" + b + ".ret";
+        outFileName = p.outputDir + getRetTypeFolder() +  "/RCResults" + b + ".ret";
         parser.setTagValue("retFile",outFileName);
       //  parser.setTagValue("queryWeightFile",queryWeightFile);
         parser.setTagValue("indexName",p.indexName);
         parser.setTagValue("c",p.maxResults);
+        parser.setTagValue("retType",retType);
         parser.save();
         RetrievabilityCalculatorApp rcApp = new RetrievabilityCalculatorApp(p.retrievabilityParamsFile);
         rcApp.calculate();
@@ -119,17 +124,16 @@ public class RunExperimentSet {
 
     private String runRetrievalStatistics (String b)
     {
-
         StatisticsRetrieval sts = new StatisticsRetrieval();
         String outFileName = p.outputDir + "/result" + b + ".res";
         sts.calculateStatistics(outFileName,"",100);
         return String.format("%s %d %d %d\n",b , sts.lineCtr , sts.docCtr , sts.limitedQryCtr);
     }
     
-    private String runRCStatistics (String b , String retType)
+    private String runRCStatistics (String b)
     {
         StatisticsRetrievabilityCalculator sts = new StatisticsRetrievabilityCalculator();
-        String outFileName = p.outputDir + retType +  "/RCResults" + b + ".ret";
+        String outFileName = p.outputDir + getRetTypeFolder() +  "/RCResults" + b + ".ret";
         sts.calculateStatistics(outFileName);
         return String.format("%s %1.6f %d %d %1.4f %1.4f\n",b ,sts.G , sts.nonZeroDocCtr , sts.zeroDocCtr , sts.sum , sts.avg );
     }
@@ -154,9 +158,13 @@ public class RunExperimentSet {
 */
     private String getTrecEvalLine (String b)
     {
-        String trecEvalLine  =
-                       String.format("~/trecEval/trec_eval ~/trecEval/Results/307-690.qrels ./result%s.res > ./trec%s.trec\n" ,
-                       b,b);
+        String qrelFile , trecEvalLine;
+        if (p.corpus == "Core17")
+            qrelFile = "307-690.qrels";
+        else
+            qrelFile = "trec2005.aquaint.qrels";
+        trecEvalLine  = String.format("~/trecEval/trec_eval ~/trecEval/Qrels/%s ./result%s.res > ./trec%s.trec\n" ,
+                        qrelFile,b,b);
         return trecEvalLine;
     }
 
@@ -200,62 +208,104 @@ public class RunExperimentSet {
     {
         // This function is used to process the whole experiment Set
       //  double bv[] = {0.1 , 0.2 , 0.25 , 0.3 , 0.35 , 0.4 , 0.45 , 0.5 , 0.6 , 0.7 , 0.8 , 0.9 , 0.95 , 0.99 };
-        String b , resSts = "" , retSts = "" , performanceValues = "" , bashLines = "" , retType = "";
+        String b , resSts = "" , retSts = "" , bashLines = "" , retFolder;
 
             for (int i = 1; i < 10; i++) {
               //  b = String.valueOf(bv[i]);
                 b = "0." + i;
-                // *** Single Experiment
-              //  runRetrievalExperiment(b);
-                retType = "/GravityWeightB0.5C100"; // "/Document Counter"
-                runRCExperiment(b,retType);
 
-                // *** Statistics ***
-              //  resSts += runRetrievalStatistics(b);
-                retSts += runRCStatistics(b,retType);
+                if (retType.isEmpty())
+                {
+                    // ***  Retrieval Processes ***
+                    // *** Single Experiment
+                    runRetrievalExperiment(b);
+                    // *** Statistics ***
+                    resSts += runRetrievalStatistics(b);
+                    // *** Perfoemance Values ***
+                    bashLines += getTrecEvalLine(b);
+                }
+                // *** Retrievability Calculator Processes ***
 
-                // *** Perfoemance Values ***
-              //  bashLines += getTrecEvalLine(b);
+                /*   retType = "/Document Counter";*/
+                /* retType = "/GravityWeightB0.5C100";*/
 
+                else
+                {
+                    // Calculation
+                    runRCExperiment(b);
+                    // *** Statistics ***
+                    retSts += runRCStatistics(b);
+                }
             } // End For
             // Print output Files
-         //   printOutput(p.outputDir + "/res.Sts" , resSts);
-            printOutput(p.outputDir + retType + "/ret.Sts" , retSts);
-         //   printOutput(p.outputDir + "/bash.sh" , bashLines);
 
+            if (retType.isEmpty())
+            {
+                printOutput(p.outputDir + "/res.Sts" , resSts);
+                printOutput(p.outputDir + "/bash.sh" , bashLines);
+            }
+            else
+                printOutput(p.outputDir + getRetTypeFolder() + "/ret.Sts" , retSts);
     } // End Function
 
     public static void main(String[] args) {
         // write your code here
         String experimentsPath = "params/BMExperimentSets";
+        String retTypes[] = {"" , "DocumentCounter" , "Gravity" } ;
+        short beginRetType = 0;
         CrossDirectoryClass cr = new CrossDirectoryClass();
         ArrayList<String> fileList = cr.crossDirectory(experimentsPath,false);
         RunExperimentSet re = new RunExperimentSet();
+
         try {
         for (String file:fileList) {
-               if (re.readParamsFromFile(file))
+            re.readParamsFromFile(file);
+            switch (re.p.exType)
             {
-                re.processExperimentSet();
-              //  re.printPerformanceValues();
-                System.out.println("Experiment " + file + " is done successfully");
-            }
-            else
-               System.out.println("Reading Parameter File " + file + " failed");
+                case "Performance":
+                    re.printPerformanceValues();
+                    break;
+                case "Retrieval":
+                    re.processExperimentSet();
+                    break;
+                case "DocumentCounter":
+                case "Gravity":
+                    re.retType = re.p.exType;
+                    re.processExperimentSet();
+                    break;
+                case "All":
+                    beginRetType = 1;
+                    break;
+                case "AllRC":
+                    beginRetType = 2;
+            } // End switch
+
+            if (beginRetType > 0)
+            {
+                for (int i = beginRetType - 1 ; i < retTypes.length ; i++)
+                {
+                    re.retType = retTypes[i];
+                    re.processExperimentSet();
+                } // End For
+            } // End if
+
+            System.out.println("Experiment " + file + " is done successfully");
 
         } // End Try
         } catch (Exception e) {
             e.printStackTrace();
         } // End Catch
 
-
     } // End Function Main
 } // End Class
 
 class ExperimentSetParams  {
     public String indexName,
+            corpus ,
             maxResults,
             tokenFilterFile,
             queryFile,
+            exType,
             retrievalParamsFile,
             retrievabilityParamsFile,
             outputDir;

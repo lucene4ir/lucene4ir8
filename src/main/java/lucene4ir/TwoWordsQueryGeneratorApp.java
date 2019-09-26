@@ -23,7 +23,7 @@ import java.util.*;
 public class TwoWordsQueryGeneratorApp {
 
     // Public Variables
-    public BigramGeneratorParams p;
+    public TwoWordsQueryGeneratorParams p;
     public HashMap<String, Long> unigramMap;
 
     // Private Variables
@@ -56,7 +56,7 @@ public class TwoWordsQueryGeneratorApp {
          3- Create Index Reader
          */
         System.out.println("Reading Parameter File");
-        p = JAXB.unmarshal(new File(paramFile), BigramGeneratorParams.class );
+        p = JAXB.unmarshal(new File(paramFile), TwoWordsQueryGeneratorParams.class );
         if (p.indexName.isEmpty())
             displayMsgThenExit("IndexName Parameter is Missing");
         System.out.println("Index: " + p.indexName);
@@ -248,7 +248,7 @@ public class TwoWordsQueryGeneratorApp {
     } // End Function
 } // End Class
 
-class BigramGeneratorParams {
+class TwoWordsQueryGeneratorParams {
     public String indexName;
     public String outFile;
     public int cutoff;

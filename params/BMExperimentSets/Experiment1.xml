@@ -2,15 +2,33 @@
 <retrievalParams>
 
     <!--Input Parameters-->
-    <indexName>Core17CombinedIndex</indexName>
-    <maxResults>100</maxResults>
+    <!-- <corpus>Core17</corpus>-->
+    <corpus>Aquaint</corpus>
+
+    <indexName>UnigramIndex</indexName>
+   <!-- <indexName>UnigramIndex</indexName>
+    <indexName>FieldedIndex</indexName>
+    <indexName>CombinedIndex</indexName>-->
+
+    <maxResults>1000</maxResults>
+
    <!-- <queryFile>out/Core17/General/Queries/300K.qry</queryFile>-->
    <!--
     Filled Automatically Based on MaxResults
     If MaxResults = 1000 - Qry50 Else Qry 300K-->
     <queryFile></queryFile>
-    <tokenFilterFile>params/index/TokenFilterFile_Combinedgram.xml</tokenFilterFile>
 
+    <!--
+  Available Experiment Run Types
+  1- Performance : Run Trec_Eval Performance from Trec_Eval files ( Required : run bash.sh is required first )
+  2- Retrieval : Run Retrieval Experiment Only
+  3- DocumentCounter : Run Only DocumentCounter Retrievability ( Requires : Run Retrieval first )
+  4- Gravity : Run Only Gravity Retrievability ( Requires : Run Retrieval first )
+  5- AllRC : Run All Retrievalbility Calculator Experiments ( DocumentCounter & Gravity )
+  6- All : Run All Experiments ( Retrieval + DocumentCounter + Gravity ) except performance
+   -->
+    <exType>Performance</exType>
+    <tokenFilterFile>params/index/TokenFilterFile_Combinedgram.xml</tokenFilterFile>
    <!-- Parameter Files -->
     <retrievalParamsFile>params/temp_retrieval_params.xml</retrievalParamsFile>
     <retrievabilityParamsFile>params/temp_retrievability_calculator_params.xml</retrievabilityParamsFile>

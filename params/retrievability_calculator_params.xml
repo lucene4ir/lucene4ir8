@@ -3,17 +3,23 @@
 
     <!--Inputs-->
     <!-- The Index to Read From-->
-    <indexName>bigramIndex</indexName>
+    <indexName>AquaintCombinedIndex</indexName>
 
     <!--output File-->
     <!--DocID - r-->
-    <retFile>out\bigram\G\300K\B\QueryWeight-Cumulative\RCResults0.7.ret</retFile>
+    <retFile>out/Aquaint/CombinedIndex/300K/C100/CombinedgramFilter/GravityWeightB0.5C100/RCResults0.9.ret</retFile>
 
+    <!--
+    For retType (Retrievability Type)  Use Either :
+    "DocumentCounter" - For Counting Documents Method Or
+    "Gravity" - For Gravity Cost Method
+    -->
+    <retType>Gravity</retType>
     <!--Other RetrievalApp Params -->
-    <queryWeightFile>out\bigram\G\300K\queryWeights.out</queryWeightFile>
-    <resFile>out\bigram\G\300K\B\result0.7.res</resFile>
+    <queryWeightFile></queryWeightFile>
+    <resFile>out/Aquaint/CombinedIndex/300K/C100/CombinedgramFilter/result0.9.res</resFile>
 
-   <!-- Cost Function Params-->
+    <!-- Cost Function Params-->
     <b>0.5</b>
     <c>100</c>
 

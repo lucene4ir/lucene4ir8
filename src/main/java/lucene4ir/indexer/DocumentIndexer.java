@@ -3,16 +3,20 @@ package lucene4ir.indexer;
 import lucene4ir.Lucene4IRConstants;
 import lucene4ir.utils.TokenAnalyzerMaker;
 import org.apache.commons.compress.compressors.z.ZCompressorInputStream;
+import lucene4ir.utils.TokenizedFields;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
+
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
+import javax.print.DocFlavor;
 import java.io.*;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -29,21 +33,32 @@ public class DocumentIndexer {
     protected boolean indexPositions;
     public IndexWriter writer;
     public Analyzer analyzer;
+    public static String fieldsFile;
+    public TokenizedFields tokenizedFields;
 
     public DocumentIndexer(){};
+    public static void setFiledsFile (String inFieldsFile)
+    {
+        fieldsFile = inFieldsFile;
+    }
 
     public DocumentIndexer(String indexPath, String tokenFilterFile, boolean positional){
         writer = null;
         analyzer = Lucene4IRConstants.ANALYZER;
         indexPositions=positional;
+        TokenizedFields tokenizedFields;
 
         if (tokenFilterFile != null){
             TokenAnalyzerMaker tam = new TokenAnalyzerMaker();
             analyzer = tam.createAnalyzer(tokenFilterFile);
+            if (!fieldsFile.isEmpty())
+            {
+                this.tokenizedFields = new TokenizedFields(fieldsFile);
+                analyzer = this.tokenizedFields.getWrappedAnalyzer(analyzer);
+            }
         }
         createWriter(indexPath);
     }
-
 
     public void createWriter(String indexPath){
         /*
@@ -57,7 +72,9 @@ public class DocumentIndexer {
             Directory dir = FSDirectory.open(Paths.get(indexPath));
             System.out.println("Indexing to directory '" + indexPath + "'...");
 
+              new IndexWriterConfig();
             IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
+
             iwc.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
             writer = new IndexWriter(dir, iwc);
 
@@ -103,16 +120,12 @@ public class DocumentIndexer {
                     br = new BufferedReader(new FileReader(filename));
             }
 
-
-
-
         } catch (Exception e){
             e.printStackTrace();
             System.exit(1);
         }
         return br;
     }
-
 
     public void finished(){
         try {

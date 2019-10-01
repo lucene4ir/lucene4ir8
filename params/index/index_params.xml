@@ -5,4 +5,5 @@
     <indexType>cacm</indexType>
     <tokenFilterFile>params/index/example_03.xml</tokenFilterFile>
     <recordPositions>true</recordPositions>
+     <fieldsFile>params/fields.xml</fieldsFile>
 </indexParams>

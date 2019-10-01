@@ -10,6 +10,7 @@ import java.util.ArrayList;
 
 import lucene4ir.utils.CrossDirectoryClass;
 import lucene4ir.indexer.*;
+import lucene4ir.utils.TokenizedFields;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.index.*;
@@ -24,10 +25,7 @@ import org.apache.lucene.index.*;
 public class IndexerApp {
 
     public IndexParams p;
-
     public DocumentIndexer di;
-
-
     private enum DocumentModel {
         CACM, CLUEWEB, TRECNEWS, TRECCC, TRECAQUAINT,
         TRECWEB, TRECTIPSTER, PUBMED , COMMONCORE , WAPO
@@ -102,7 +100,7 @@ public class IndexerApp {
 
             case COMMONCORE:
                 System.out.println("COMMONCORE");
-                di = new CommonCoreDocumentIndexer(p.indexName, p.tokenFilterFile, p.recordPositions);
+                di = new CommonCoreDocumentIndexer(p.indexName, p.tokenFilterFile ,  p.recordPositions);
                 break;
 
             case WAPO:
@@ -112,11 +110,9 @@ public class IndexerApp {
 
             default:
                 System.out.println("Default Document Parser");
-
                 break;
         }
     }
-
 
     public ArrayList<String> readFileListFromFile(){
         /*
@@ -125,12 +121,8 @@ public class IndexerApp {
          */
 
         String filename = p.fileList;
-
         ArrayList<String> files = new ArrayList<String>();
-
-
         CrossDirectoryClass cd;
-
         // check whether the input filename is a folder
         if (new File(filename).isDirectory()) {
             cd = new CrossDirectoryClass();
@@ -158,7 +150,6 @@ public class IndexerApp {
 
     public void readIndexParamsFromFile(String indexParamFile){
         try {
-
             p = JAXB.unmarshal(new File(indexParamFile), IndexParams.class);
 
         } catch (Exception e){
@@ -173,14 +164,15 @@ public class IndexerApp {
         System.out.println("Path to index: " + p.indexName);
         System.out.println("List of files to index: " + p.fileList);
         System.out.println("Record positions in index: " + p.recordPositions);
-
     }
 
     public IndexerApp(String indexParamFile){
         System.out.println("Indexer App");
         readIndexParamsFromFile(indexParamFile);
         setDocParser(p.indexType);
+        DocumentIndexer.setFiledsFile(p.fieldsFile);
         selectDocumentParser(docModel);
+
     }
 
     public void indexDocumentsFromFile(String filename){
@@ -189,7 +181,6 @@ public class IndexerApp {
 
     public void finished(){
         di.finished();
-
         try {
             IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(p.indexName)));
             long numDocs = reader.numDocs();
@@ -235,11 +226,12 @@ public class IndexerApp {
 
 
 class IndexParams {
-    public String indexName;
-    public String fileList;
-    public String indexType; /** trecWeb, trecNews, trec678, cacm **/
+    public String indexName,
+                  fileList,
+                  tokenFilterFile,
+                  fieldsFile,
+                  indexType; /** trecWeb, trecNews, trec678, cacm **/
     //public Boolean compressed;
-    public String tokenFilterFile;
     public Boolean recordPositions;
 
 }

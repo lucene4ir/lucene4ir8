@@ -45,9 +45,23 @@ public class RunExperimentSet {
             qryCount = "300K";
             C = "C100";
         } // End else
+        if (p.indexName.startsWith("Core17"))
+            p.corpus = "Core17";
+        else
+            p.corpus = "Aquaint";
+
         p.queryFile = String.format("out/%s/Queries/%s.qry" , p.corpus,qryCount);
         indexFolder = p.indexName;
-        p.indexName = p.corpus + p.indexName;
+        if (p.indexName.contains("Combined"))
+            indexFolder = "CombinedIndex";
+        else if (p.indexName.contains("Unigram"))
+            indexFolder = "UnigramIndex";
+        else if (p.indexName.contains("Bigram"))
+            indexFolder = "BigramIndex";
+        else if (p.indexName.contains("Fielded"))
+            indexFolder = "FieldedIndex";
+
+       // p.indexName = p.corpus + indexFolder;
         //   Sample Output
         //   out\Core17\UnigramIndex\50\C1000\CombinedgramFilter
         p.outputDir = String.format("out/%s/%s/%s/%s/CombinedgramFilter" ,
@@ -199,9 +213,8 @@ public class RunExperimentSet {
         } // End For
 
         if (!result.isEmpty())
-        {
             printOutput(p.outputDir + "/trecValues.trec", result);
-        } // End if
+
     } // End Function
 
     private void processExperimentSet () throws Exception
@@ -229,7 +242,7 @@ public class RunExperimentSet {
                 /*   retType = "/Document Counter";*/
                 /* retType = "/GravityWeightB0.5C100";*/
 
-                else
+                else if (p.maxResults == "100")
                 {
                     // Calculation
                     runRCExperiment(b);
@@ -248,30 +261,25 @@ public class RunExperimentSet {
                 printOutput(p.outputDir + getRetTypeFolder() + "/ret.Sts" , retSts);
     } // End Function
 
-    public static void main(String[] args) {
-        // write your code here
-        String experimentsPath = "params/BMExperimentSets";
+    private void runExperimentFile (String fileName)
+    {
         String retTypes[] = {"" , "DocumentCounter" , "Gravity" } ;
         short beginRetType = 0;
-        CrossDirectoryClass cr = new CrossDirectoryClass();
-        ArrayList<String> fileList = cr.crossDirectory(experimentsPath,false);
-        RunExperimentSet re = new RunExperimentSet();
 
         try {
-        for (String file:fileList) {
-            re.readParamsFromFile(file);
-            switch (re.p.exType)
+            readParamsFromFile(fileName);
+            switch (p.exType)
             {
                 case "Performance":
-                    re.printPerformanceValues();
+                    printPerformanceValues();
                     break;
                 case "Retrieval":
-                    re.processExperimentSet();
+                    processExperimentSet();
                     break;
                 case "DocumentCounter":
                 case "Gravity":
-                    re.retType = re.p.exType;
-                    re.processExperimentSet();
+                    retType = p.exType;
+                    processExperimentSet();
                     break;
                 case "All":
                     beginRetType = 1;
@@ -284,18 +292,83 @@ public class RunExperimentSet {
             {
                 for (int i = beginRetType - 1 ; i < retTypes.length ; i++)
                 {
-                    re.retType = retTypes[i];
-                    re.processExperimentSet();
+                    retType = retTypes[i];
+                    processExperimentSet();
                 } // End For
             } // End if
-
-            System.out.println("Experiment " + file + " is done successfully");
-
-        } // End Try
-        } catch (Exception e) {
+            System.out.println("Experiment " + fileName + " is done successfully");
+         } // End Try
+            catch (Exception e) {
             e.printStackTrace();
         } // End Catch
+    } // End Function
 
+    private void runFileList (String folderName) {
+        CrossDirectoryClass cr = new CrossDirectoryClass();
+        ArrayList<String> fileList = cr.crossDirectory(folderName, false);
+        RunExperimentSet re = new RunExperimentSet();
+        for (String file : fileList)
+            runExperimentFile(file);
+    }
+
+    private void fillParameterFile (String fileName ,  String indexName , String maxResults)
+    {
+        String corpus  , exType , tokenFilterFile = "";
+        String biTokenFilterFile = "params/index/TokenFilterFile_Bigram.xml",
+                uniTokenFilterFile = "params/index/TokenFilterFile_Unigram.xml",
+                combinedTokenFilterFile = "params/index/TokenFilterFile_Combinedgram.xml";
+
+        if (maxResults.equals("1000"))
+            exType = "Retrieval";
+        else
+            exType = "All";
+
+        if (indexName.startsWith("Core17"))
+            corpus = "Core17";
+        else
+            corpus = "Aquaint";
+
+        if (indexName.contains("Combined"))
+            tokenFilterFile = combinedTokenFilterFile;
+        else  if (indexName.contains("Unigram"))
+            tokenFilterFile = uniTokenFilterFile;
+        else  if (indexName.contains("Bigram"))
+            tokenFilterFile = biTokenFilterFile;
+
+        XMLTextParser parser = new XMLTextParser(fileName);
+        parser.setTagValue("corpus",corpus);
+        parser.setTagValue("indexName",indexName);
+        parser.setTagValue("maxResults",maxResults);
+        parser.setTagValue("exType",exType);
+        parser.setTagValue("tokenFilterFile",tokenFilterFile);
+        parser.save();
+    } // End Function
+
+    private void runCalculatedList ()
+    {
+        String paramFileName =  "params/BMExperimentSets/TempExperiment.xml",
+                indexName , maxResult;
+       String[] indexNames = {"Core17UnigramIndex","Core17BigramIndex",
+                "AquaintBigramIndex","AquaintCombinedIndex","AquaintUnigramIndex"};
+       String maxResults[] = {"100"};
+
+       for (int i = 0 ; i < indexNames.length ; i++)
+           for (int j=0 ; j < maxResults.length ; j++ )
+           {
+               indexName = indexNames[i];
+               maxResult =  maxResults[j];
+               fillParameterFile(paramFileName , indexName , maxResult);
+               runExperimentFile(paramFileName);
+           }
+
+    }
+
+    public static void main(String[] args)
+        {
+        // write your code here
+        RunExperimentSet re = new RunExperimentSet();
+        re.runCalculatedList();
+       //     re.runExperimentFile("params\\BMExperimentSets\\Experiment2.xml");
     } // End Function Main
 } // End Class
 

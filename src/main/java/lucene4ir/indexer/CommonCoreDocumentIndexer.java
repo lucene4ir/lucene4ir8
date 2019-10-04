@@ -134,10 +134,6 @@ public class CommonCoreDocumentIndexer extends DocumentIndexer {
             analyzer = tam.createAnalyzer(defaultTokenFilterFile);
     } // End Function*/
 
-  private boolean fielded ()
-  {
-      return tokenizedFields.getSize() > 0;
-  }
 
     private void initFields()
     {

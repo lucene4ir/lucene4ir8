@@ -21,6 +21,7 @@ public class TRECAquaintDocumentIndexer extends DocumentIndexer {
     private Field titleField;
     private Field textField;
     private Field allField;
+    private Field biAllField;
     private Field sourceField;
     private Field pubdateField;
     private Document doc;
@@ -54,6 +55,7 @@ public class TRECAquaintDocumentIndexer extends DocumentIndexer {
             textField = new TermVectorEnabledTextField(Lucene4IRConstants.FIELD_BODY, "", Field.Store.YES);
             allField = new TermVectorEnabledTextField(Lucene4IRConstants.FIELD_RAW, "", Field.Store.YES);
             sourceField = new TermVectorEnabledTextField(Lucene4IRConstants.FIELD_SOURCE, "", Field.Store.YES);
+
         }
         else {
             titleField = new TextField(Lucene4IRConstants.FIELD_TITLE, "", Field.Store.YES);
@@ -61,6 +63,12 @@ public class TRECAquaintDocumentIndexer extends DocumentIndexer {
             allField = new TextField(Lucene4IRConstants.FIELD_RAW, "", Field.Store.YES);
             sourceField = new TextField(Lucene4IRConstants.FIELD_SOURCE, "", Field.Store.YES);
         }
+
+        if (this.fielded())
+            if (indexPositions)
+                biAllField = new TermVectorEnabledTextField(tokenizedFields.getFieldName(0), "", Field.Store.YES);
+            else
+                biAllField = new TextField(tokenizedFields.getFieldName(0), "", Field.Store.YES);
     }
 
     private void initAQUAINTDoc() {
@@ -88,6 +96,11 @@ public class TRECAquaintDocumentIndexer extends DocumentIndexer {
         doc.add(titleField);
         doc.add(textField);
         doc.add(allField);
+        if (fielded())
+        {
+            biAllField.setStringValue(all);
+            doc.add(biAllField);
+        }
         System.out.println("Adding document: " + docid + " Title: " + title);
         return doc;
     }

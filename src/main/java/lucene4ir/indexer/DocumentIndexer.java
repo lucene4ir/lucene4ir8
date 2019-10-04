@@ -42,6 +42,10 @@ public class DocumentIndexer {
         fieldsFile = inFieldsFile;
     }
 
+    public boolean fielded()
+    {
+        return fieldsFile != null;
+    }
     public DocumentIndexer(String indexPath, String tokenFilterFile, boolean positional){
         writer = null;
         analyzer = Lucene4IRConstants.ANALYZER;
@@ -51,7 +55,7 @@ public class DocumentIndexer {
         if (tokenFilterFile != null){
             TokenAnalyzerMaker tam = new TokenAnalyzerMaker();
             analyzer = tam.createAnalyzer(tokenFilterFile);
-            if (!fieldsFile.isEmpty())
+            if (fielded())
             {
                 this.tokenizedFields = new TokenizedFields(fieldsFile);
                 analyzer = this.tokenizedFields.getWrappedAnalyzer(analyzer);

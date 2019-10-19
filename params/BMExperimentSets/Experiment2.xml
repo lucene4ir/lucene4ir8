@@ -2,16 +2,15 @@
 <retrievalParams>
 
     <!--Input Parameters-->
-    <!-- <corpus>Core17</corpus>-->
-    <corpus>Aquaint</corpus>
 
-    <indexName>UnigramIndex</indexName>
-   <!-- <indexName>UnigramIndex</indexName>
-    <indexName>FieldedIndex</indexName>
-    <indexName>CombinedIndex</indexName>-->
+    <!--
+    AquaintUnigramIndex AquaintBigramIndex AquaintCombinedIndex AquaintFieldedIndex
+    Core17UnigramIndex Core17BigramIndex Core17CombinedIndex Core17FieldedIndex
+    -->
+
+    <indexName>AquaintUnigramAnseriniIndex</indexName>
 
     <maxResults>1000</maxResults>
-
    <!-- <queryFile>out/Core17/General/Queries/300K.qry</queryFile>-->
    <!--
     Filled Automatically Based on MaxResults
@@ -28,7 +27,6 @@
   6- All : Run All Experiments ( Retrieval + DocumentCounter + Gravity ) except performance
    -->
     <exType>Performance</exType>
-    <tokenFilterFile>params/index/TokenFilterFile_Combinedgram.xml</tokenFilterFile>
    <!-- Parameter Files -->
     <retrievalParamsFile>params/temp_retrieval_params.xml</retrievalParamsFile>
     <retrievabilityParamsFile>params/temp_retrievability_calculator_params.xml</retrievabilityParamsFile>

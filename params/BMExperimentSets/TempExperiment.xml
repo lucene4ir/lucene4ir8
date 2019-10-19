@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<retrievalParams>
+    <!--Input Parameters-->
+    <corpus>Aquaint</corpus>
+    <indexName>AquaintUnigramIndex</indexName>
+    <maxResults>1000</maxResults>
+    <queryFile></queryFile>
+    <exType>Retrieval</exType>
+    <tokenFilterFile>params/index/TokenFilterFile_Combinedgram.xml</tokenFilterFile>
+    <retrievalParamsFile>params/temp_retrieval_params.xml</retrievalParamsFile>
+    <retrievabilityParamsFile>params/temp_retrievability_calculator_params.xml</retrievabilityParamsFile>
+    <outputDir></outputDir> <!--Filled Automatically Based on QueryFile & MaxResults & IndexName-->
+</retrievalParams>

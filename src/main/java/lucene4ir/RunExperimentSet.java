@@ -8,8 +8,10 @@ import lucene4ir.utils.XMLTextParser;
 import javax.xml.bind.JAXB;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class RunExperimentSet {
+    private HashMap<String, Double> tempDocMap;
     private ExperimentSetParams p;
     private String
             biFilter = "params/index/p.tokenFilterFile_Bigram.xml",
@@ -29,7 +31,7 @@ public class RunExperimentSet {
          Sample OutputDir
          out\Core17\UnigramIndex\50\C1000\CombinedgramFilter
          */
-        String qryCount , indexFolder , C;
+        String qryCount , indexFolder = "" , C , corpus;
 
         retType = "";
         if (p.exType.equals("Performance"))
@@ -45,13 +47,10 @@ public class RunExperimentSet {
             qryCount = "300K";
             C = "C100";
         } // End else
-        if (p.indexName.startsWith("Core17"))
-            p.corpus = "Core17";
-        else
-            p.corpus = "Aquaint";
 
-        p.queryFile = String.format("out/%s/Queries/%s.qry" , p.corpus,qryCount);
-        indexFolder = p.indexName;
+        corpus = getCorpus(p.indexName);
+        p.queryFile = String.format("out/%s/Queries/%s.qry" , corpus,qryCount);
+
         if (p.indexName.contains("Combined"))
             indexFolder = "CombinedIndex";
         else if (p.indexName.contains("Unigram"))
@@ -61,11 +60,11 @@ public class RunExperimentSet {
         else if (p.indexName.contains("Fielded"))
             indexFolder = "FieldedIndex";
 
-       // p.indexName = p.corpus + indexFolder;
+
         //   Sample Output
         //   out\Core17\UnigramIndex\50\C1000\CombinedgramFilter
         p.outputDir = String.format("out/%s/%s/%s/%s/CombinedgramFilter" ,
-                p.corpus , indexFolder , qryCount , C);
+                corpus , indexFolder , qryCount , C);
     }
     private void readParamsFromFile(String paramFile) throws Exception
     {
@@ -120,6 +119,7 @@ public class RunExperimentSet {
     }
     private void runRCExperiment (String b)
     {
+
         // Run Retrievability Calculator Experiments for given B Value
         String outFileName;
         XMLTextParser parser = new XMLTextParser(p.retrievabilityParamsFile);
@@ -138,12 +138,25 @@ public class RunExperimentSet {
 
     private String runRetrievalStatistics (String b)
     {
+        int maxResultsInt;
         StatisticsRetrieval sts = new StatisticsRetrieval();
         String outFileName = p.outputDir + "/result" + b + ".res";
-        sts.calculateStatistics(outFileName,"",100);
+        maxResultsInt = Integer.parseInt(p.maxResults);
+        sts.calculateStatistics(outFileName,"",maxResultsInt);
         return String.format("%s %d %d %d\n",b , sts.lineCtr , sts.docCtr , sts.limitedQryCtr);
     }
-    
+    private String getCorpus (String indexName)
+    {
+        String result = "";
+
+        if (!indexName.isEmpty())
+            if (indexName.startsWith("Core17"))
+                result = "Core17";
+            else
+                result = "Aquaint";
+        return result;
+    }
+
     private String runRCStatistics (String b)
     {
         StatisticsRetrievabilityCalculator sts = new StatisticsRetrievabilityCalculator();
@@ -172,8 +185,9 @@ public class RunExperimentSet {
 */
     private String getTrecEvalLine (String b)
     {
-        String qrelFile , trecEvalLine;
-        if (p.corpus == "Core17")
+        String qrelFile , trecEvalLine , corpus;
+        corpus = getCorpus(p.indexName);
+        if (corpus.equals("Core17"))
             qrelFile = "307-690.qrels";
         else
             qrelFile = "trec2005.aquaint.qrels";
@@ -220,10 +234,9 @@ public class RunExperimentSet {
     private void processExperimentSet () throws Exception
     {
         // This function is used to process the whole experiment Set
-      //  double bv[] = {0.1 , 0.2 , 0.25 , 0.3 , 0.35 , 0.4 , 0.45 , 0.5 , 0.6 , 0.7 , 0.8 , 0.9 , 0.95 , 0.99 };
-        String b , resSts = "" , retSts = "" , bashLines = "" , retFolder;
+         String b , resSts = "" , retSts = "" , bashLines = "" ;
 
-            for (int i = 1; i < 10; i++) {
+         for (int i = 1; i < 10; i++) {
               //  b = String.valueOf(bv[i]);
                 b = "0." + i;
 
@@ -242,7 +255,7 @@ public class RunExperimentSet {
                 /*   retType = "/Document Counter";*/
                 /* retType = "/GravityWeightB0.5C100";*/
 
-                else if (p.maxResults == "100")
+                else if (p.maxResults.equals("100"))
                 {
                     // Calculation
                     runRCExperiment(b);
@@ -250,15 +263,15 @@ public class RunExperimentSet {
                     retSts += runRCStatistics(b);
                 }
             } // End For
-            // Print output Files
 
-            if (retType.isEmpty())
-            {
-                printOutput(p.outputDir + "/res.Sts" , resSts);
-                printOutput(p.outputDir + "/bash.sh" , bashLines);
-            }
-            else
-                printOutput(p.outputDir + getRetTypeFolder() + "/ret.Sts" , retSts);
+            // Print output Files
+        if (retType.isEmpty())
+        {
+            printOutput(p.outputDir + "/res.Sts" , resSts);
+            printOutput(p.outputDir + "/bash.sh" , bashLines);
+        }
+        else
+            printOutput(p.outputDir + getRetTypeFolder() + "/ret.Sts" , retSts);
     } // End Function
 
     private void runExperimentFile (String fileName)
@@ -313,54 +326,43 @@ public class RunExperimentSet {
 
     private void fillParameterFile (String fileName ,  String indexName , String maxResults)
     {
-        String corpus  , exType , tokenFilterFile = "";
-        String biTokenFilterFile = "params/index/TokenFilterFile_Bigram.xml",
-                uniTokenFilterFile = "params/index/TokenFilterFile_Unigram.xml",
-                combinedTokenFilterFile = "params/index/TokenFilterFile_Combinedgram.xml";
+        String corpus  , exType ;
 
         if (maxResults.equals("1000"))
             exType = "Retrieval";
         else
             exType = "All";
 
-        if (indexName.startsWith("Core17"))
-            corpus = "Core17";
-        else
-            corpus = "Aquaint";
-
-        if (indexName.contains("Combined"))
-            tokenFilterFile = combinedTokenFilterFile;
-        else  if (indexName.contains("Unigram"))
-            tokenFilterFile = uniTokenFilterFile;
-        else  if (indexName.contains("Bigram"))
-            tokenFilterFile = biTokenFilterFile;
-
+        corpus = getCorpus(indexName);
         XMLTextParser parser = new XMLTextParser(fileName);
         parser.setTagValue("corpus",corpus);
         parser.setTagValue("indexName",indexName);
         parser.setTagValue("maxResults",maxResults);
         parser.setTagValue("exType",exType);
-        parser.setTagValue("tokenFilterFile",tokenFilterFile);
         parser.save();
     } // End Function
 
     private void runCalculatedList ()
     {
-        String paramFileName =  "params/BMExperimentSets/TempExperiment.xml",
+        String paramFileName =  "params/BMExperimentSets/Experiment2.xml",
                 indexName , maxResult;
-       String[] indexNames = {"Core17UnigramIndex","Core17BigramIndex",
+       String[] indexNames = {"Core17UnigramIndex","Core17BigramIndex","Core17CombinedIndex" ,
                 "AquaintBigramIndex","AquaintCombinedIndex","AquaintUnigramIndex"};
-       String maxResults[] = {"100"};
+       //String maxResults[] = {"1000"};
 
-       for (int i = 0 ; i < indexNames.length ; i++)
+
+      /* for (int i = 0 ; i < indexNames.length ; i++)
            for (int j=0 ; j < maxResults.length ; j++ )
            {
-               indexName = indexNames[i];
-               maxResult =  maxResults[j];
-               fillParameterFile(paramFileName , indexName , maxResult);
-               runExperimentFile(paramFileName);
-           }
+               p.indexName = indexNames[i];
+               fillAutoParameters();
 
+                  fillParameterFile(paramFileName , indexName , maxResult);
+               runExperimentFile(paramFileName);
+          }
+        */
+
+        runExperimentFile(paramFileName);
     }
 
     public static void main(String[] args)
@@ -368,15 +370,13 @@ public class RunExperimentSet {
         // write your code here
         RunExperimentSet re = new RunExperimentSet();
         re.runCalculatedList();
-       //     re.runExperimentFile("params\\BMExperimentSets\\Experiment2.xml");
+          //  re.runExperimentFile("params\\BMExperimentSets\\Experiment2.xml");
     } // End Function Main
 } // End Class
 
 class ExperimentSetParams  {
     public String indexName,
-            corpus ,
             maxResults,
-            tokenFilterFile,
             queryFile,
             exType,
             retrievalParamsFile,

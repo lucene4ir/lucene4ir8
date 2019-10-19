@@ -13,6 +13,7 @@ import java.util.HashMap;
 public class RunExperimentSet {
     private HashMap<String, Double> tempDocMap;
     private ExperimentSetParams p;
+
     private String
             biFilter = "params/index/p.tokenFilterFile_Bigram.xml",
             uniFilter = "params/index/p.tokenFilterFile_Unigram.xml" ,

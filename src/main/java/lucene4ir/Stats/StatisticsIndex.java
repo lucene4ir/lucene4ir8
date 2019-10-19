@@ -76,6 +76,7 @@ public class StatisticsIndex {
         System.out.println(outText);
     } // End Function
 
+
     private void iterateField(String fldName) throws IOException {
         // Iterate through the given Field (fldName)
         // and calculate general statistics for its terms
@@ -178,9 +179,13 @@ public class StatisticsIndex {
             pr.write(line + "\n");
     }
 
-    private void openReader() throws Exception
+    private void openReader()
     {
-        reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexName)));
+        try {
+            reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexName)));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     } // End Function
 
     private void printTermList() throws Exception
@@ -253,11 +258,12 @@ public class StatisticsIndex {
         {
            trs = ex.reader.getTermVector(i,fldName);
            currentTermsCount = trs.getSumTotalTermFreq();
-           line = "Document " + i + " TermCount : " + currentTermsCount;
-            printLine(line);
+         //  line = "Document " + i + " TermCount : " + currentTermsCount;
+         //   printLine(line);
             totalTerms += currentTermsCount;
         } // End For
-        line = "Total Terms : " + totalTerms;
+        line = "Total Terms : " + totalTerms + "\n" +
+                "Average Document Length : " + totalTerms * 1.0 /maxdoc ;
         printLine(line);
     }  // End Function
 
@@ -312,19 +318,25 @@ private void  checkAnalyzer (String indexType) throws Exception
     }
 
     printLine(indexType + " Index has " + termsCount + " terms");
-
-
 } // End Function
 
+    private void printDocCount ()
+    {
+        openReader();
+        System.out.println("Total Document Count : " + reader.maxDoc());
+    }
     public static void main(String[] args) {
         /*
       Small :  smallFieldedIndex smallCombinedIndex smallBigramIndex smallUnigramIndex testIndex biraw
       Single : SingleDocument30WordsBigramIndex SingleDocument30WordsCombinedIndex SingleDocument30WordsUnigramIndex SingleDocument30WordsFieldedIndex
       Corpus:  Core17BigramIndex Core17CombinedIndex Core17UnigramIndex Core17FieldedIndex
+       AquaintsmallFieldedIndex AquaintsmallUnigramIndex AquaintsmallBigramIndex AquaintsmallCombinedIndex
+       Corpus:  AquaintBigramIndex AquaintCombinedIndex AquaintUnigramIndex AquaintFieldedIndex
          */
 
         StatisticsIndex sts = new StatisticsIndex();
-        sts.indexName = "testIndex";
+         // C:/Users/kkb19103/Desktop/My Files 07-08-2019/LUCENE/anserini-master/lucene-index.core18.pos+docvectors+rawdocs
+        sts.indexName = "AquaintsmallCombinedIndex";
         sts.fldName = "raw";
         sts.outDir = "C:\\Users\\kkb19103\\Desktop\\CheckTerms\\";
 
@@ -336,9 +348,11 @@ private void  checkAnalyzer (String indexType) throws Exception
         //    sts.checkAnalyzer("Combined");
           //  sts.printTermList();
            sts.printTermCount();
+          //  sts.printDocCount();
+
           //  sts.printLeavesCount();
          //  sts.printTermLeavesCount();
-         //   sts.printFieldList();
+           sts.printFieldList();
             if (!sts.screenOutput)
                 sts.pr.close();
         } catch (Exception e) {

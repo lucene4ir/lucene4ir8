@@ -2,6 +2,7 @@ package lucene4ir;
 
 import lucene4ir.Stats.StatisticsRetrievabilityCalculator;
 import lucene4ir.Stats.StatisticsRetrieval;
+import lucene4ir.parse.CSVParser;
 import lucene4ir.utils.CrossDirectoryClass;
 import lucene4ir.utils.XMLTextParser;
 
@@ -11,16 +12,39 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class RunExperimentSet {
-    private HashMap<String, Double> tempDocMap;
     private ExperimentSetParams p;
 
     private String
-            biFilter = "params/index/p.tokenFilterFile_Bigram.xml",
+           /* biFilter = "params/index/p.tokenFilterFile_Bigram.xml",
             uniFilter = "params/index/p.tokenFilterFile_Unigram.xml" ,
             combinedFilter = "params/index/p.tokenFilterFile_Combinedgram.xml" ,
-            tokenFilterFile = combinedFilter,
-            retType;
+            tokenFilterFile = combinedFilter,*/
+            csvKey;
+    private CSVParser csvPaser;
 
+    private String getBashLine(String b)
+    {
+        String qrelFile , trecEvalLine , corpus;
+        corpus = getCorpus(p.indexName);
+        if (corpus.equals("Core17"))
+            qrelFile = "307-690.qrels";
+        else
+            qrelFile = "trec2005.aquaint.qrels";
+        trecEvalLine  = String.format("~/trecEval/trec_eval ~/trecEval/Qrels/%s ./result%s.res > ./trec%s.trec\n" ,
+                qrelFile,b,b);
+        return trecEvalLine;
+    }
+    private String getCorpus (String indexName)
+    {
+        String result = "";
+
+        if (!indexName.isEmpty())
+            if (indexName.startsWith("Core17"))
+                result = "Core17";
+            else
+                result = "Aquaint";
+        return result;
+    }
     private void fillAutoParameters()
     {
         /*
@@ -32,9 +56,9 @@ public class RunExperimentSet {
          Sample OutputDir
          out\Core17\UnigramIndex\50\C1000\CombinedgramFilter
          */
-        String qryCount , indexFolder = "" , C , corpus;
+        String qryCount , indexFolder = "" , C , corpus , csvFile ,
+        outPutFolder = "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\Bias Measurement Experiments";
 
-        retType = "";
         if (p.exType.equals("Performance"))
             p.maxResults = "1000";
 
@@ -50,7 +74,7 @@ public class RunExperimentSet {
         } // End else
 
         corpus = getCorpus(p.indexName);
-        p.queryFile = String.format("out/%s/Queries/%s.qry" , corpus,qryCount);
+        p.queryFile = String.format("%s/%s/Queries/%s.qry" , outPutFolder, corpus,qryCount);
 
         if (p.indexName.contains("Combined"))
             indexFolder = "CombinedIndex";
@@ -64,8 +88,17 @@ public class RunExperimentSet {
 
         //   Sample Output
         //   out\Core17\UnigramIndex\50\C1000\CombinedgramFilter
-        p.outputDir = String.format("out/%s/%s/%s/%s/CombinedgramFilter" ,
-                corpus , indexFolder , qryCount , C);
+        p.outputDir = String.format("%s/%s/%s/%s/%s/CombinedgramFilter" ,
+                outPutFolder , corpus , indexFolder , qryCount , C);
+        csvFile = outPutFolder + "/out.csv";
+        csvPaser = new CSVParser();
+        csvPaser.readFromFile(csvFile);
+
+        /*CSV Key
+        corpus - indexType - qryFilter - qryCount - model - maxResults - other - B*/
+        csvKey = String.format("%s,%s,%s,%s,%s,%s, ,",
+                corpus,indexFolder , "combinedQuery" , qryCount , "BM25" , p.maxResults);
+        p.indexName = outPutFolder + "/Indexes/" + p.indexName;
     }
     private void readParamsFromFile(String paramFile) throws Exception
     {
@@ -80,7 +113,54 @@ public class RunExperimentSet {
         pr.write(outText);
         pr.close();
     }
-    private void runRetrievalExperiment(String b)
+    private void fillParameterFile (String fileName ,  String indexName , String maxResults)
+    {
+        String corpus  , exType ;
+
+        if (maxResults.equals("1000"))
+            exType = "Retrieval";
+        else
+            exType = "All";
+
+        corpus = getCorpus(indexName);
+        XMLTextParser parser = new XMLTextParser(fileName);
+        parser.setTagValue("corpus",corpus);
+        parser.setTagValue("indexName",indexName);
+        parser.setTagValue("maxResults",maxResults);
+        parser.setTagValue("exType",exType);
+        parser.save();
+    } // End Function
+
+    private String getRetTypeFolder(String retType)
+    {
+        /*   exType (DocumentCounter) = "/DocumentCounter";*/
+        /* exType (Gravity) = "/GravityWeightB0.5C100";*/
+        String result = "";
+        if (retType == "Gravity")
+            result =   "/GravityWeightB0.5C100";
+        else
+            result =   "/DocumentCounter";
+        return result;
+    }
+
+    private String runRetrievalStatistics (String b)
+    {
+        int maxResultsInt;
+        StatisticsRetrieval sts = new StatisticsRetrieval();
+        String outFileName = p.outputDir + "/result" + b + ".res";
+        maxResultsInt = Integer.parseInt(p.maxResults);
+        sts.calculateStatistics(outFileName,"",maxResultsInt);
+        return String.format("%d,%d,%d", sts.lineCtr , sts.docCtr , sts.limitedQryCtr);
+    }
+    private String runRCStatistics (String b , String retType)
+    {
+        StatisticsRetrievabilityCalculator sts = new StatisticsRetrievabilityCalculator();
+        String outFileName = p.outputDir + getRetTypeFolder(retType) +  "/RCResults" + b + ".ret";
+        sts.calculateStatistics(outFileName);
+        return String.format("%1.6f,%d,%d,%1.4f,%1.4f",sts.G , sts.nonZeroDocCtr , sts.zeroDocCtr , sts.sum , sts.avg );
+    }
+
+    private String runRetrievalExperiment(String b)
     {
         // Run RetrievalApp Experiment for given B Value
         String outFileName;
@@ -105,211 +185,113 @@ public class RunExperimentSet {
             retApp = new RetrievalApp(p.retrievalParamsFile);
             retApp.processQueryFile();
         } // End Else
+        return runRetrievalStatistics(b);
     } // End Function
 
-    private String getRetTypeFolder()
-    {
-        /*   exType (DocumentCounter) = "/DocumentCounter";*/
-        /* exType (Gravity) = "/GravityWeightB0.5C100";*/
-        String result = "";
-        if (retType == "Gravity")
-            result =   "/GravityWeightB0.5C100";
-        else
-            result =   "/DocumentCounter";
-        return result;
-    }
-    private void runRCExperiment (String b)
+    private String runRCExperiment (String b , String retType)
     {
 
         // Run Retrievability Calculator Experiments for given B Value
-        String outFileName;
+        String outFileName ;
         XMLTextParser parser = new XMLTextParser(p.retrievabilityParamsFile);
         outFileName = p.outputDir + "/result" + b + ".res";
         parser.setTagValue("resFile",outFileName);
-        outFileName = p.outputDir + getRetTypeFolder() +  "/RCResults" + b + ".ret";
+        outFileName = p.outputDir + getRetTypeFolder(retType) +  "/RCResults" + b + ".ret";
         parser.setTagValue("retFile",outFileName);
-      //  parser.setTagValue("queryWeightFile",queryWeightFile);
         parser.setTagValue("indexName",p.indexName);
         parser.setTagValue("c",p.maxResults);
         parser.setTagValue("retType",retType);
         parser.save();
         RetrievabilityCalculatorApp rcApp = new RetrievabilityCalculatorApp(p.retrievabilityParamsFile);
         rcApp.calculate();
+        return runRCStatistics(b,retType);
     } // End Function
-
-    private String runRetrievalStatistics (String b)
-    {
-        int maxResultsInt;
-        StatisticsRetrieval sts = new StatisticsRetrieval();
-        String outFileName = p.outputDir + "/result" + b + ".res";
-        maxResultsInt = Integer.parseInt(p.maxResults);
-        sts.calculateStatistics(outFileName,"",maxResultsInt);
-        return String.format("%s %d %d %d\n",b , sts.lineCtr , sts.docCtr , sts.limitedQryCtr);
-    }
-    private String getCorpus (String indexName)
-    {
-        String result = "";
-
-        if (!indexName.isEmpty())
-            if (indexName.startsWith("Core17"))
-                result = "Core17";
-            else
-                result = "Aquaint";
-        return result;
-    }
-
-    private String runRCStatistics (String b)
-    {
-        StatisticsRetrievabilityCalculator sts = new StatisticsRetrievabilityCalculator();
-        String outFileName = p.outputDir + getRetTypeFolder() +  "/RCResults" + b + ".ret";
-        sts.calculateStatistics(outFileName);
-        return String.format("%s %1.6f %d %d %1.4f %1.4f\n",b ,sts.G , sts.nonZeroDocCtr , sts.zeroDocCtr , sts.sum , sts.avg );
-    }
-    
-    /*private void runTrecEval (String b)
-    {
-        String cmd = trecEval.replaceAll("0.0",b);
-        ProcessBuilder builder = new ProcessBuilder();
-        builder.command("C:/Users/kkb19103/AppData/Local/Microsoft/WindowsApps/ubuntu.exe ls");
-
-        try {
-            // Runtime.getRuntime().exec(cmd).waitFor();
-            builder.start();
-        }
-        //catch (InterruptedException e) {
-        //    e.printStackTrace();
-        //}
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-*/
-    private String getTrecEvalLine (String b)
-    {
-        String qrelFile , trecEvalLine , corpus;
-        corpus = getCorpus(p.indexName);
-        if (corpus.equals("Core17"))
-            qrelFile = "307-690.qrels";
-        else
-            qrelFile = "trec2005.aquaint.qrels";
-        trecEvalLine  = String.format("~/trecEval/trec_eval ~/trecEval/Qrels/%s ./result%s.res > ./trec%s.trec\n" ,
-                        qrelFile,b,b);
-        return trecEvalLine;
-    }
-
-    private void printPerformanceValues() throws Exception
+    private String getPerformanceValues(String b) throws Exception
     {
         String inFile ,
-                b,
                 line,
                 parts[],
                 result = "";
         BufferedReader br;
-        for (int i = 1 ; i < 10 ; i++)
+        inFile = p.outputDir + "/trec" + b + ".trec";
+        br = new BufferedReader(new FileReader(inFile));
+        result += b + "\t";
+        while ((line = br.readLine()) != null)
         {
-            b = "0." + i;
-            inFile = p.outputDir + "/trec" + b + ".trec";
-            br = new BufferedReader(new FileReader(inFile));
-            result += b + "\t";
-            while ((line = br.readLine()) != null)
+            if (line.startsWith("map"))
             {
-                if (line.startsWith("map"))
-                {
-                    parts = line.split("\t",3);
-                    result += parts[2] + "\t";
-                } // End if
-                else if (line.startsWith("P10"))
-                {
-                    parts = line.split("\t",3);
-                    result += parts[2] + "\n";
-                    break;
-                } // End else if
-            } // End While
-        } // End For
-
-        if (!result.isEmpty())
-            printOutput(p.outputDir + "/trecValues.trec", result);
-
+                parts = line.split("\t",3);
+                result += parts[2] + "\t";
+            } // End if
+            else if (line.startsWith("P10"))
+            {
+                parts = line.split("\t",3);
+                result += parts[2] + "\n";
+                break;
+            } // End else if
+        } // End While
+        return result;
     } // End Function
+    private void runALLRC (String b)
+    {
+        String result;
+        // Calculation
+        result = runRCExperiment(b,"DocumentCounter");
+        // *** Statistics ***
+        csvPaser.setRetC(result);
+        result = runRCExperiment(b,"Gravity");
+        csvPaser.setRetG(result);
+    }
 
     private void processExperimentSet () throws Exception
     {
         // This function is used to process the whole experiment Set
-         String b , resSts = "" , retSts = "" , bashLines = "" ;
+         String b , retResult , bashLines = ""  ;
+
 
          for (int i = 1; i < 10; i++) {
               //  b = String.valueOf(bv[i]);
+
                 b = "0." + i;
-
-                if (retType.isEmpty())
+                csvPaser.setKey(csvKey + b);
+                csvPaser.resetCSVValues();
+                switch (p.exType)
                 {
-                    // ***  Retrieval Processes ***
-                    // *** Single Experiment
-                    runRetrievalExperiment(b);
-                    // *** Statistics ***
-                    resSts += runRetrievalStatistics(b);
-                    // *** Perfoemance Values ***
-                    bashLines += getTrecEvalLine(b);
-                }
-                // *** Retrievability Calculator Processes ***
-
-                /*   retType = "/Document Counter";*/
-                /* retType = "/GravityWeightB0.5C100";*/
-
-                else if (p.maxResults.equals("100"))
-                {
-                    // Calculation
-                    runRCExperiment(b);
-                    // *** Statistics ***
-                    retSts += runRCStatistics(b);
-                }
+                    case "All":
+                        csvPaser.setRes(runRetrievalExperiment(b));
+                        bashLines += getBashLine(b);
+                        runALLRC(b);
+                        break;
+                    case "AllRC":
+                        runALLRC(b);
+                        break;
+                    case "DocumentCounter":
+                        csvPaser.setRetC(runRCExperiment(b,p.exType));
+                        break;
+                    case "Gravity":
+                        csvPaser.setRetG(runRCExperiment(b,p.exType));
+                        break;
+                    case "Retrieval":
+                        csvPaser.setRes(runRetrievalExperiment(b));
+                        bashLines += getBashLine(b);
+                        break;
+                    case "Performance" :
+                        csvPaser.setPerformance(getPerformanceValues(b));
+                } // End Switch
+                csvPaser.updateCSVLine();
             } // End For
 
-            // Print output Files
-        if (retType.isEmpty())
-        {
-            printOutput(p.outputDir + "/res.Sts" , resSts);
+        if (!bashLines.isEmpty())
             printOutput(p.outputDir + "/bash.sh" , bashLines);
-        }
-        else
-            printOutput(p.outputDir + getRetTypeFolder() + "/ret.Sts" , retSts);
+        csvPaser.updateCSVFile();
+
     } // End Function
 
     private void runExperimentFile (String fileName)
     {
-        String retTypes[] = {"" , "DocumentCounter" , "Gravity" } ;
-        short beginRetType = 0;
-
         try {
             readParamsFromFile(fileName);
-            switch (p.exType)
-            {
-                case "Performance":
-                    printPerformanceValues();
-                    break;
-                case "Retrieval":
-                    processExperimentSet();
-                    break;
-                case "DocumentCounter":
-                case "Gravity":
-                    retType = p.exType;
-                    processExperimentSet();
-                    break;
-                case "All":
-                    beginRetType = 1;
-                    break;
-                case "AllRC":
-                    beginRetType = 2;
-            } // End switch
-
-            if (beginRetType > 0)
-            {
-                for (int i = beginRetType - 1 ; i < retTypes.length ; i++)
-                {
-                    retType = retTypes[i];
-                    processExperimentSet();
-                } // End For
-            } // End if
+            processExperimentSet();
             System.out.println("Experiment " + fileName + " is done successfully");
          } // End Try
             catch (Exception e) {
@@ -324,24 +306,6 @@ public class RunExperimentSet {
         for (String file : fileList)
             runExperimentFile(file);
     }
-
-    private void fillParameterFile (String fileName ,  String indexName , String maxResults)
-    {
-        String corpus  , exType ;
-
-        if (maxResults.equals("1000"))
-            exType = "Retrieval";
-        else
-            exType = "All";
-
-        corpus = getCorpus(indexName);
-        XMLTextParser parser = new XMLTextParser(fileName);
-        parser.setTagValue("corpus",corpus);
-        parser.setTagValue("indexName",indexName);
-        parser.setTagValue("maxResults",maxResults);
-        parser.setTagValue("exType",exType);
-        parser.save();
-    } // End Function
 
     private void runCalculatedList ()
     {

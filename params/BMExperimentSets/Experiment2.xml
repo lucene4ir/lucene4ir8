@@ -8,7 +8,7 @@
     Core17UnigramIndex Core17BigramIndex Core17CombinedIndex Core17FieldedIndex
     -->
 
-    <indexName>AquaintUnigramAnseriniIndex</indexName>
+    <indexName>Core17BigramIndex</indexName>
 
     <maxResults>1000</maxResults>
    <!-- <queryFile>out/Core17/General/Queries/300K.qry</queryFile>-->
@@ -26,7 +26,7 @@
   5- AllRC : Run All Retrievalbility Calculator Experiments ( DocumentCounter & Gravity )
   6- All : Run All Experiments ( Retrieval + DocumentCounter + Gravity ) except performance
    -->
-    <exType>Performance</exType>
+    <exType>Retrieval</exType>
    <!-- Parameter Files -->
     <retrievalParamsFile>params/temp_retrieval_params.xml</retrievalParamsFile>
     <retrievabilityParamsFile>params/temp_retrievability_calculator_params.xml</retrievabilityParamsFile>

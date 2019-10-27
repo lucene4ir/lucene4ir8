@@ -7,7 +7,7 @@ public class CSVParser {
 
    /*
    Header :
-    1- Key - 6 values
+    1- Key - 8 values
     corpus - indexType - qryFilter - qryCount - model - maxResults - other - B
     2- Res File - 3 values
     resLineCount - resDocCount - limitedQueries<max
@@ -16,7 +16,7 @@ public class CSVParser {
     4- ret File (Gravity) - 6 values
         B , retGravityG , retGravityRValues<>0 , retGravityRValues=0 , retGravitySumR , retGravityAVGR
     5- Performance - 3 values
-    MAP , P10 , Bref
+    MAP ,  pbref , P10
 
 */
     // CSV Key Fields

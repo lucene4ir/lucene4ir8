@@ -3,21 +3,21 @@
 
     <!--Inputs-->
     <!-- The Index to Read From-->
-    <indexName>Core17FieldedIndex</indexName>
+    <indexName>C:\Users\kkb19103\Desktop\My Files 07-08-2019\BiasMeasurementExperiments\Indexes\Core17FieldedIndex</indexName>
 
     <!--output File-->
     <!--DocID - r-->
-    <retFile>out/Core17/FieldedIndex/300K/C100/CombinedgramFilter/GravityWeightB0.5C100/RCResults0.9.ret</retFile>
+    <retFile>C:\Users\kkb19103\Desktop\My Files 07-08-2019\BiasMeasurementExperiments\Core17\FieldedIndex\300K\C100\GravityWeightB0.5C100\RCResults0.2.ret</retFile>
 
     <!--
     For retType (Retrievability Type)  Use Either :
-    "DocumentCounter" - For Counting Documents Method Or
+    "Cumulative" - For Counting Documents Method Or
     "Gravity" - For Gravity Cost Method
     -->
     <retType>Gravity</retType>
     <!--Other RetrievalApp Params -->
     <queryWeightFile></queryWeightFile>
-    <resFile>out/Core17/FieldedIndex/300K/C100/CombinedgramFilter/result0.9.res</resFile>
+    <resFile>C:\Users\kkb19103\Desktop\My Files 07-08-2019\BiasMeasurementExperiments\Core17\FieldedIndex\300K\C100\result0.2.res</resFile>
 
     <!-- Cost Function Params-->
     <b>0.5</b>

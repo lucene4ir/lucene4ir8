@@ -247,7 +247,6 @@ public class StatisticsIndex {
         ex.indexName = indexName;
         openWriter("TermCount");
 
-
         line = String.format("Index Name : %s\nFieldName : %s",indexName , fldName);
         printLine(line);
         ex.openReader();
@@ -334,9 +333,10 @@ private void  checkAnalyzer (String indexType) throws Exception
        Corpus:  AquaintBigramIndex AquaintCombinedIndex AquaintUnigramIndex AquaintFieldedIndex
          */
 
+        String indexesFolder = "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\BiasMeasurementExperiments\\Indexes\\";
         StatisticsIndex sts = new StatisticsIndex();
          // C:/Users/kkb19103/Desktop/My Files 07-08-2019/LUCENE/anserini-master/lucene-index.core18.pos+docvectors+rawdocs
-        sts.indexName = "AquaintsmallCombinedIndex";
+        sts.indexName = indexesFolder + "Core17UnigramIndex";
         sts.fldName = "raw";
         sts.outDir = "C:\\Users\\kkb19103\\Desktop\\CheckTerms\\";
 
@@ -352,7 +352,7 @@ private void  checkAnalyzer (String indexType) throws Exception
 
           //  sts.printLeavesCount();
          //  sts.printTermLeavesCount();
-           sts.printFieldList();
+         //  sts.printFieldList();
             if (!sts.screenOutput)
                 sts.pr.close();
         } catch (Exception e) {

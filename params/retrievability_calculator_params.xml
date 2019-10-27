@@ -11,7 +11,7 @@
 
     <!--
     For retType (Retrievability Type)  Use Either :
-    "DocumentCounter" - For Counting Documents Method Or
+    "Cumulative" - For Counting Documents Method Or
     "Gravity" - For Gravity Cost Method
     -->
     <retType>Gravity</retType>

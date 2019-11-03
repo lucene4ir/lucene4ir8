@@ -3,6 +3,7 @@ package lucene4ir;
 import lucene4ir.Stats.StatisticsRetrievabilityCalculator;
 import lucene4ir.Stats.StatisticsRetrieval;
 import lucene4ir.parse.CSVParser;
+
 import lucene4ir.utils.CrossDirectoryClass;
 import lucene4ir.utils.XMLTextParser;
 
@@ -33,12 +34,13 @@ public class RunExperimentSet {
                 qrelFile,b,b);
         return trecEvalLine;
     }
+
     private String getCorpus (String indexName)
     {
         String result = "";
 
         if (!indexName.isEmpty())
-            if (indexName.startsWith("Core17"))
+            if (indexName.contains("Core17"))
                 result = "Core17";
             else
                 result = "Aquaint";
@@ -58,18 +60,18 @@ public class RunExperimentSet {
         String qryCount , indexFolder = "" , C , corpus , csvFile ,
         outPutFolder = "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\BiasMeasurementExperiments";
 
-        if (p.exType.equals("Performance"))
-            p.maxResults = "1000";
-
         if (p.maxResults.equals("1000"))
         {
             qryCount = "50";
             C = "C1000";
+            p.exType = "Retrieval";
+           // p.exType = "Performance";
         } // End if
         else
         {
             qryCount = "300K";
             C = "C100";
+            p.exType = "All";
         } // End else
 
         corpus = getCorpus(p.indexName);
@@ -96,7 +98,7 @@ public class RunExperimentSet {
         /*CSV Key
         corpus - indexType - qryFilter - qryCount - model - maxResults - other - B*/
         csvKey = String.format("%s,%s,%s,%s,%s,%s, ,",
-                corpus,indexFolder , "combinedQuery" , qryCount , "BM25" , p.maxResults);
+                corpus,indexFolder , "combinedQuery" , qryCount , "LMD" , p.maxResults);
         p.indexName = outPutFolder + "\\Indexes\\" + p.indexName;
     }
     private void readParamsFromFile(String paramFile) throws Exception
@@ -114,17 +116,9 @@ public class RunExperimentSet {
     }
     private void fillExperimentParameterFile(String fileName , String indexName , String maxResults)
     {
-        String  exType ;
-
-        if (maxResults.equals("1000"))
-            exType = "Retrieval";
-        else
-            exType = "All";
-
         XMLTextParser parser = new XMLTextParser(fileName);
         parser.setTagValue("indexName",indexName);
         parser.setTagValue("maxResults",maxResults);
-        parser.setTagValue("exType",exType);
         parser.save();
     } // End Function
 
@@ -144,7 +138,7 @@ public class RunExperimentSet {
     {
         int maxResultsInt;
         StatisticsRetrieval sts = new StatisticsRetrieval();
-        String outFileName = p.outputDir + "/result" + b + ".res";
+        String outFileName = p.outputDir + "\\result" + b + ".res";
         maxResultsInt = Integer.parseInt(p.maxResults);
         sts.calculateStatistics(outFileName,"",maxResultsInt);
         return String.format("%d,%d,%d", sts.lineCtr , sts.docCtr , sts.limitedQryCtr);
@@ -166,7 +160,7 @@ public class RunExperimentSet {
 
         XMLTextParser parser = new XMLTextParser(p.retrievalParamsFile);
         outFileName = p.outputDir + "/result" + b + ".res";
-        parser.setTagValue("b", b );
+        parser.setTagValue("c", b );
         parser.setTagValue("resultFile",outFileName);
         parser.setTagValue("queryFile",p.queryFile);
         parser.setTagValue("indexName",p.indexName);
@@ -211,7 +205,7 @@ public class RunExperimentSet {
                 keys[] = {"map","bpref","P10"};
         BufferedReader br;
         int i = 0;
-        inFile = p.outputDir + "/trec" + b + ".trec";
+        inFile = p.outputDir + "\\trec" + b + ".trec";
         br = new BufferedReader(new FileReader(inFile));
 
         while ((line = br.readLine()) != null && i < keys.length )
@@ -229,30 +223,34 @@ public class RunExperimentSet {
         // Calculation
         result = runRCExperiment(b,"Cumulative");
         // *** Statistics ***
-        csvPaser.setRetC(result);
+        csvPaser.appendRetCG(result);
         result = runRCExperiment(b,"Gravity");
-        csvPaser.setRetG("0.5," + result);
+        csvPaser.appendRetGG("0.5," + result);
     }
 
     private void processExperimentSet () throws Exception
     {
         // This function is used to process the whole experiment Set
-         String b , retResult , bashLines = ""  ;
+         String b , retResult , bashLines = "" , line  ;
 
+         String bRange[] = {"0.1", "0.5", "1.0", "5.0", "10", "15", "20", "50"};
 
-         for (int i = 1; i < 11; i++) {
+         for (int i = 0; i < bRange.length; i++) {
               //  b = String.valueOf(bv[i]);
 
-             if (i == 10)
-                 b = "1.0";
+             /*if (i == 11)
+                 b = "5000";
              else
-                b = "0." + i;
-                csvPaser.setKey(csvKey + b);
-                csvPaser.resetCSVValues();
-                switch (p.exType)
+              //  b = "0." + i;
+                b = String.valueOf(i*100);
+            //b = "5000";*/
+             b = bRange[i];
+            csvPaser.appendKey(csvKey + b);
+            csvPaser.resetValues();
+            switch (p.exType)
                 {
                     case "All":
-                        csvPaser.setRes(runRetrievalExperiment(b));
+                        csvPaser.appendRes(runRetrievalExperiment(b));
                         bashLines += getBashLine(b);
                         runALLRC(b);
                         break;
@@ -260,19 +258,31 @@ public class RunExperimentSet {
                         runALLRC(b);
                         break;
                     case "Cumulative":
-                        csvPaser.setRetC(runRCExperiment(b,p.exType));
+                        csvPaser.appendRetCG(runRCExperiment(b,p.exType));
                         break;
                     case "Gravity":
-                        csvPaser.setRetG(runRCExperiment(b,p.exType));
+                        csvPaser.appendRetGG(runRCExperiment(b,p.exType));
                         break;
                     case "Retrieval":
-                        csvPaser.setRes(runRetrievalExperiment(b));
+                        csvPaser.appendRes(runRetrievalExperiment(b));
                         bashLines += getBashLine(b);
                         break;
                     case "Performance" :
-                        csvPaser.setPerformance(getPerformanceValues(b));
+                        if (p.maxResults.equals("1000"))
+                            csvPaser.appendPerformance(getPerformanceValues(b));
+                        break;
+                    case "ReadSts":
+                        csvPaser.appendRes(runRetrievalStatistics(b));
+                        if (p.maxResults.equals("1000"))
+                            csvPaser.appendPerformance(getPerformanceValues(b));
+                        else
+                        {
+                            csvPaser.appendRetCG(runRCStatistics(b,"Cumulative"));
+                            csvPaser.appendRetGG("0.5," + runRCStatistics(b,"Gravity"));
+                        }
                 } // End Switch
-                csvPaser.updateCSVLine();
+                line = csvPaser.updateCSVLine();
+                System.out.println("Current CSV Line : " + line);
             } // End For
 
         if (!bashLines.isEmpty())
@@ -304,9 +314,9 @@ public class RunExperimentSet {
     private void runCalculatedList ()
     {
         String paramFileName =  "params/BMExperimentSets/Experiment2.xml";
-       String[] indexNames = { "AquaintFieldedIndex","Core17FieldedIndex"
-              /* "AquaintBigramIndex","AquaintCombinedIndex","AquaintUnigramIndex" , "AquaintFieldedIndex",
-               "Core17UnigramIndex","Core17BigramIndex","Core17CombinedIndex"  , "Core17FieldedIndex"*/
+       String[] indexNames = {
+               "AquaintBigramIndex","AquaintCombinedIndex","AquaintUnigramIndex" , "AquaintFieldedIndex",
+               "Core17UnigramIndex","Core17BigramIndex","Core17CombinedIndex"  , "Core17FieldedIndex"
                };
        String maxResults[] = {"100","1000"};
 

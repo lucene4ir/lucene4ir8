@@ -24,6 +24,7 @@ import static lucene4ir.RetrievalApp.SimModel.BM25;
 import static lucene4ir.RetrievalApp.SimModel.LMD;
 import static lucene4ir.RetrievalApp.SimModel.PL2;
 
+
 public class RetrievalApp {
 
     public RetrievalParams p;
@@ -77,15 +78,16 @@ public class RetrievalApp {
                 colModel = new LMSimilarity.DefaultCollectionModel();
                 simfn = new LMJelinekMercerSimilarity(colModel, p.lam);
                 break;
-/*
+
             case PL2:
                 System.out.println("PL2 Similarity Function (?)");
-                BasicModel bm = new BasicModelP();
+               // BasicModel bm = new BasicModelP();
+                BasicModel bm = new BasicModelIn();
                 AfterEffect ae = new AfterEffectL();
                 Normalization nn = new NormalizationH2(p.c);
                 simfn = new DFRSimilarity(bm, ae, nn);
                 break;
-
+/*
             case DFR:
                 System.out.println("DFR Similarity Function with no after effect (?)");
                 BasicModel bmd = new BasicModelD();

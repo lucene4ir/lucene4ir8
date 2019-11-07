@@ -64,8 +64,8 @@ public class RunExperimentSet {
         {
             qryCount = "50";
             C = "C1000";
-            p.exType = "Retrieval";
-           // p.exType = "Performance";
+            // p.exType = "Retrieval";
+            p.exType = "Performance";
         } // End if
         else
         {
@@ -98,7 +98,7 @@ public class RunExperimentSet {
         /*CSV Key
         corpus - indexType - qryFilter - qryCount - model - maxResults - other - B*/
         csvKey = String.format("%s,%s,%s,%s,%s,%s, ,",
-                corpus,indexFolder , "combinedQuery" , qryCount , "LMD" , p.maxResults);
+                corpus,indexFolder , "combinedQuery" , qryCount , "PL2" , p.maxResults);
         p.indexName = outPutFolder + "\\Indexes\\" + p.indexName;
     }
     private void readParamsFromFile(String paramFile) throws Exception
@@ -318,7 +318,7 @@ public class RunExperimentSet {
                "AquaintBigramIndex","AquaintCombinedIndex","AquaintUnigramIndex" , "AquaintFieldedIndex",
                "Core17UnigramIndex","Core17BigramIndex","Core17CombinedIndex"  , "Core17FieldedIndex"
                };
-       String maxResults[] = {"100","1000"};
+       String maxResults[] = {"1000"};
 
 
        for (int i = 0 ; i < indexNames.length ; i++)

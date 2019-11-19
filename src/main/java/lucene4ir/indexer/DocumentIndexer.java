@@ -44,7 +44,7 @@ public class DocumentIndexer {
 
     public boolean fielded()
     {
-        return fieldsFile != null;
+        return !(fieldsFile == null || fieldsFile.isEmpty()) ;
     }
     public DocumentIndexer(String indexPath, String tokenFilterFile, boolean positional){
         writer = null;

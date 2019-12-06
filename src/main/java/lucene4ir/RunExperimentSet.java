@@ -60,32 +60,11 @@ public class RunExperimentSet {
         String qryCount = "" , indexFolder = "" , C = "", corpus , csvFile ,
         outPutFolder = "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\BiasMeasurementExperiments";
 
-        switch(p.maxResults)
-        {
-            case "1000":
-                qryCount = "50";
-                C = "C1000";
-                // p.exType = "Retrieval";
-                // p.exType = "Performance";
-                break;
-            case "100":
-                qryCount = "300K";
-                C = "C100";
-                //  p.exType = "All";
-                break;
-            case "10":
-                qryCount = "50";
-                C = "C10";
-        }
-
-       /* if (p.maxResults.equals("1000"))
-        {
-
-        } // End if
+        C = "C" + p.maxResults;
+        if (p.maxResults.equals("100"))
+            qryCount = "300K";
         else
-        {
-
-        } // End else*/
+            qryCount = "50";
 
         corpus = getCorpus(p.indexName);
         p.queryFile = String.format("%s/%s/Queries/%s.qry" , outPutFolder, corpus,qryCount);
@@ -139,7 +118,7 @@ public class RunExperimentSet {
     {
         String result = "";
         if (retType == "Gravity")
-            result =   "\\GravityWeightB0.5C10";
+            result =   "\\GravityWeightB0.5C" + p.maxResults;
         else
             result =   "\\Cumulative";
         return result;
@@ -192,7 +171,6 @@ public class RunExperimentSet {
 
     private String runRCExperiment (String b , String retType)
     {
-
         // Run Retrievability Calculator Experiments for given B Value
         String outFileName ;
         XMLTextParser parser = new XMLTextParser(p.retrievabilityParamsFile);
@@ -290,11 +268,10 @@ public class RunExperimentSet {
                     runALLRC(b);
                     break;
                 case "Cumulative":
-                    csvPaser.setRet(runRCExperiment(b,p.exType));
-                    break;
                 case "Gravity":
                     csvPaser.setRet(runRCExperiment(b,p.exType));
                     break;
+
                 case "Retrieval":
                     csvPaser.setRes(runRetrievalExperiment(b));
                     bashLines += getBashLine(b);
@@ -303,16 +280,13 @@ public class RunExperimentSet {
                     csvPaser.setPerformance(getPerformanceValues(b));
                     break;
                 case "ReadSts":
-                    csvPaser.setRes(runRetrievalStatistics(b));
                     if (p.maxResults.equals("1000"))
                         csvPaser.setPerformance(getPerformanceValues(b));
-                    else
-                    {
-                        csvPaser.setRet(runRCStatistics(b,"Cumulative"));
-                        csvPaser.addCSVLineToMap();
-                        csvPaser.setKey(getNewKey("0.5",b));
-                        csvPaser.setRet(runRCStatistics(b,"Gravity"));
-                    }
+                    csvPaser.setRes(runRetrievalStatistics(b));
+                    csvPaser.setRet(runRCStatistics(b,"Cumulative"));
+                    csvPaser.addCSVLineToMap();
+                    csvPaser.setKey(getNewKey("0.5",b));
+                    csvPaser.setRet(runRCStatistics(b,"Gravity"));
             } // End Switch
             line = csvPaser.addCSVLineToMap();
 
@@ -348,7 +322,7 @@ public class RunExperimentSet {
     {
         String paramFileName =  "params/BMExperimentSets/Experiment2.xml";
        String[] indexNames = {
-               /*"AquaintBigramIndex","AquaintCombinedIndex","AquaintUnigramIndex" , "AquaintFieldedIndex",*/
+               "AquaintBigramIndex","AquaintCombinedIndex","AquaintUnigramIndex" , "AquaintFieldedIndex",
                "Core17UnigramIndex","Core17BigramIndex","Core17CombinedIndex"  , "Core17FieldedIndex"
                };
        String maxResults[] = {"10"};
@@ -371,7 +345,7 @@ public class RunExperimentSet {
                     result;
         RunExperimentSet re = new RunExperimentSet();
         re.runCalculatedList();
-       // re.runExperimentFile(sourceFile);
+
     } // End Function Main
 } // End Class
 

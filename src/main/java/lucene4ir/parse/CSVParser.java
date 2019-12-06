@@ -99,13 +99,10 @@ public class CSVParser {
             if (csvLine.getRes().isEmpty())
                 csvLine.setRes(extractValue(value,start,resCount));
 
-
             start +=resCount;
             if (csvLine.getPerformance().isEmpty())
                 csvLine.setPerformance(extractValue(value,start,performanceCount));
-
             value = csvLine.getAllValues();
-
 
             csvMap.put(newKey, value);
             value = newKey + separator + value;

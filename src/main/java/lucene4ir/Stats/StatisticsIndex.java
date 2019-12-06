@@ -188,7 +188,7 @@ public class StatisticsIndex {
         }
     } // End Function
 
-    private void printTermList() throws Exception
+    private void printTermList(boolean withFrequency) throws Exception
     {
         String line ;
         Terms trs;
@@ -210,6 +210,8 @@ public class StatisticsIndex {
                 {
               //  line = "Term : " + term.utf8ToString();
                 line = term.utf8ToString();
+                if (withFrequency)
+                    line += " " + it.totalTermFreq();
                 printLine(line);
                 } // End while
         } // End For
@@ -319,6 +321,11 @@ private void  checkAnalyzer (String indexType) throws Exception
     printLine(indexType + " Index has " + termsCount + " terms");
 } // End Function
 
+    private void printDocLength (int docID) throws Exception
+    {
+        openReader();
+      String temp = reader.document(docID).get("raw").toString();
+    }
     private void printDocCount ()
     {
         openReader();
@@ -336,7 +343,8 @@ private void  checkAnalyzer (String indexType) throws Exception
         String indexesFolder = "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\BiasMeasurementExperiments\\Indexes\\";
         StatisticsIndex sts = new StatisticsIndex();
          // C:/Users/kkb19103/Desktop/My Files 07-08-2019/LUCENE/anserini-master/lucene-index.core18.pos+docvectors+rawdocs
-        sts.indexName = indexesFolder + "Core17UnigramIndex";
+        // oneDocCombinedIndex - oneDocUnigramIndex
+        sts.indexName =  "oneDocCombinedIndex";
         sts.fldName = "raw";
         sts.outDir = "C:\\Users\\kkb19103\\Desktop\\CheckTerms\\";
 
@@ -346,8 +354,11 @@ private void  checkAnalyzer (String indexType) throws Exception
          //   sts.checkAnalyzer("Unigram");
         //    sts.checkAnalyzer("Bigram");
         //    sts.checkAnalyzer("Combined");
-          //  sts.printTermList();
-           sts.printTermCount();
+
+          //  sts.printDocLength(0);
+
+            sts.printTermList(true);
+        //   sts.printTermCount();
           //  sts.printDocCount();
 
           //  sts.printLeavesCount();

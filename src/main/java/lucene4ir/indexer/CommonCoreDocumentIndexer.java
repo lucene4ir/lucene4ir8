@@ -257,7 +257,7 @@ public class CommonCoreDocumentIndexer extends DocumentIndexer {
 
             // Gather All in All (RAW) Field
             all = title + " " + content + " " + source + " " + pubdate;
-
+            all = getFieldByTag( "p");
            // Clear The Document
            doc.clear();
             // Move from Values Array to Fields Array and add to a new Document to Preparre it

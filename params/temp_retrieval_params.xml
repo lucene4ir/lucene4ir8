@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <retrievalParams>
-    <indexName>C:\Users\kkb19103\Desktop\My Files 07-08-2019\BiasMeasurementExperiments\Indexes\Core17FieldedIndex</indexName>
-    <queryFile>C:\Users\kkb19103\Desktop\My Files 07-08-2019\BiasMeasurementExperiments/Core17/Queries/300K.qry</queryFile>
+    <indexName>C:\Users\kkb19103\Desktop\My Files 07-08-2019\BiasMeasurementExperiments\Indexes\AquaintBigramIndex</indexName>
+    <queryFile>C:\Users\kkb19103\Desktop\My Files 07-08-2019\BiasMeasurementExperiments/Aquaint/Queries/300K.qry</queryFile>
     <maxResults>100</maxResults>
-    <model>bm25</model>
-    <b>0.3</b>
+    <model>PL2</model>
+    <!--  <b>0.4</b>
     <k>1.2</k>
-    <resultFile>C:\Users\kkb19103\Desktop\My Files 07-08-2019\BiasMeasurementExperiments\Core17\FieldedIndex\300K\C100/result0.3.res</resultFile>
+     <mu>5000</mu>
+    -->
+    <c>0.1</c>
+    <resultFile>C:\Users\kkb19103\Desktop\My Files 07-08-2019\BiasMeasurementExperiments\Aquaint\BigramIndex\300K\C100/result0.1.res</resultFile>
     <tokenFilterFile>params/index/TokenFilterFile_Combinedgram.xml</tokenFilterFile>
     <runTag>Fred</runTag>
     <fieldsFile>params/fields.xml</fieldsFile>

@@ -10,13 +10,15 @@
 
     <indexName>Core17FieldedIndex</indexName>
 
-    <maxResults>100</maxResults>
+    <maxResults>10</maxResults>
    <!-- <queryFile>out/Core17/General/Queries/300K.qry</queryFile>-->
    <!--
     Filled Automatically Based on MaxResults
     If MaxResults = 1000 - Qry50 Else Qry 300K-->
     <queryFile></queryFile>
 
+    <!--BM25 - LMD - PL2-->
+    <model>PL2</model>
     <!--
   Available Experiment Run Types
   1- Performance : Run Trec_Eval Performance from Trec_Eval files ( Required : run bash.sh is required first )
@@ -25,8 +27,9 @@
   4- Gravity : Run Only Gravity Retrievability ( Requires : Run Retrieval first )
   5- AllRC : Run All Retrievalbility Calculator Experiments ( DocumentCounter & Gravity )
   6- All : Run All Experiments ( Retrieval + DocumentCounter + Gravity ) except performance
+  7- ReadSts : Read Previously Calculated res and ret Files
    -->
-    <exType>All</exType>
+    <exType>Performance</exType>
    <!-- Parameter Files -->
     <retrievalParamsFile>params/temp_retrieval_params.xml</retrievalParamsFile>
     <retrievabilityParamsFile>params/temp_retrievability_calculator_params.xml</retrievabilityParamsFile>

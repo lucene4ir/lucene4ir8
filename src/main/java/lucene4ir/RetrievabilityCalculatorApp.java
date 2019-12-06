@@ -206,7 +206,7 @@ public class RetrievabilityCalculatorApp {
             docid = parts[2].trim();
 
             // Document Counter Lines
-            if (p.retType.equals("Gravity")) {
+            if (p.b != 0) {
                 qryid = Integer.parseInt(parts[0]);
                 rank = Integer.parseInt(parts[3]);
                 r = calculateR(qryid, rank);
@@ -300,7 +300,7 @@ public class RetrievabilityCalculatorApp {
     @XmlRootElement(name = "RetrievabilityCalculatorParams")
     static
     public class RetrievabilityCalculatorParams {
-        public String indexName , retFile ,resFile , queryWeightFile , retType;
+        public String indexName , retFile ,resFile , queryWeightFile ;
         public int    c;
         public float b;
 

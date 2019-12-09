@@ -13,6 +13,9 @@ public class Lucene4IRConstants {
     public static final String FIELD_DOCNUM = FIELD_ID;
     public static final String FIELD_RAW = "raw";
     public static final String FIELD_BODY = "contents";
+    public static final String FIELD_KICKER = "kicker";
+    public static final String FIELD_FULLCAPTION = "fullCaption";
+    public static final String FIELD_ARTICLE_URL = "article_url";
 
 
     // Additional fields for trec collections

@@ -20,6 +20,7 @@ import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.search.DocValuesNumbersQuery;
+import org.jsoup.Jsoup;
 
 import java.io.BufferedReader;
 import java.sql.Date;
@@ -29,84 +30,108 @@ import java.util.ArrayList;
 
 public class WapoDocumentIndexer extends DocumentIndexer {
     // Properties
-    ArrayList<Field> fields;
-    String contentFieldName = Lucene4IRConstants.FIELD_BODY;
-    int lineNumber;
+    private Field fldDocID ,
+            fldPubDate ,
+            fldTitle,
+            fldContent,
+            fldAuthor,
+            fldFullCaption,
+            fldArticle_URL,
+            fldKicker,
+            fldAll,
+            fldBiAll;
+    String all;
+    private Document doc;
 
-    private void addFieldToDocument(String fldName , char fldType)
-    {
-         /*
-        This Function is Used to Create a Field based on the input FieldName and FieldType
-            if The Field Type = "s" then String Field
-            Else ( TextField or TermVectorTextField According to the current indexPositions
-            Then add the resultant field to the Document
-         */
-        Field aField;
-        if (fldType == 's')
-            aField = new StringField(fldName, "", Field.Store.YES);
-        else if (indexPositions)
-            aField = new TermVectorEnabledTextField(fldName, "", Field.Store.YES);
-        else
-            aField = new TextField(fldName, "", Field.Store.YES);
-        fields.add(aField);
-    }
     private void initFields()
     {
         /*
         Initialize Fields Collection in the Following Sequence :
-        1- Document Number
+        1- DocID
         2- Title
-        3- Paragraph
-        4- ALL
-        Then Add them to the fields Collection
+        3- Author
+        4- Publish Date
+        5- Contents
+        6- Full_Caption
+        7- Article_URL
+        8- Kicker
+        9- All
  */
-        fields = new ArrayList<Field>();
-        addFieldToDocument(Lucene4IRConstants.FIELD_DOCNUM,'s');
-        addFieldToDocument(Lucene4IRConstants.FIELD_TITLE,' ');
-        addFieldToDocument(Lucene4IRConstants.FIELD_PUBDATE,' ');
-        addFieldToDocument("contentID",' ');
-        addFieldToDocument(contentFieldName,' ');
-        addFieldToDocument(Lucene4IRConstants.FIELD_RAW,' ');
+        doc = new Document();
+        // Short String Fields (Single Word Fields )
+        fldDocID = new StringField(Lucene4IRConstants.FIELD_DOCNUM, "", Field.Store.YES);
+        fldPubDate = new StringField(Lucene4IRConstants.FIELD_PUBDATE, "", Field.Store.YES);
+        fldKicker = new StringField(Lucene4IRConstants.FIELD_KICKER, "", Field.Store.YES);
+        fldArticle_URL = new StringField(Lucene4IRConstants.FIELD_ARTICLE_URL, "", Field.Store.YES);
 
-      //  addFieldToDocument(Lucene4IRConstants.FIELD_AUTHOR,' ');
-       // addFieldToDocument(Lucene4IRConstants.FIELD_SOURCE,' ');
+        // Term Vector Fields (More than one word)
+        if (indexPositions)
+        {
+            fldTitle = new lucene4ir.indexer.TermVectorEnabledTextField(Lucene4IRConstants.FIELD_TITLE, "",  Field.Store.YES);
+            fldFullCaption = new lucene4ir.indexer.TermVectorEnabledTextField(Lucene4IRConstants.FIELD_FULLCAPTION, "",  Field.Store.YES);
+            fldAuthor = new lucene4ir.indexer.TermVectorEnabledTextField(Lucene4IRConstants.FIELD_AUTHOR, "",  Field.Store.YES);
+            fldContent = new lucene4ir.indexer.TermVectorEnabledTextField(Lucene4IRConstants.FIELD_BODY, "", Field.Store.YES);
+            fldAll = new lucene4ir.indexer.TermVectorEnabledTextField(Lucene4IRConstants.FIELD_RAW, "", Field.Store.YES);
+            if (fielded())
+                fldBiAll = new lucene4ir.indexer.TermVectorEnabledTextField(tokenizedFields.getFieldName(0), "", Field.Store.YES);
+        } // End if
+        else
+        {
+            fldTitle = new TextField(Lucene4IRConstants.FIELD_TITLE, "", Field.Store.YES);
+            fldFullCaption = new TextField(Lucene4IRConstants.FIELD_FULLCAPTION, "",  Field.Store.YES);
+            fldAuthor = new TextField(Lucene4IRConstants.FIELD_AUTHOR, "",  Field.Store.YES);
+            fldContent = new TextField(Lucene4IRConstants.FIELD_BODY, "", Field.Store.YES);
+            fldAll = new TextField(Lucene4IRConstants.FIELD_RAW, "", Field.Store.YES);
+            if (fielded())
+                fldBiAll = new TextField (tokenizedFields.getFieldName(0), "", Field.Store.YES);
+        } // End Else
+
     }
 
     // Constructor Method (Initialization)
     public WapoDocumentIndexer(String indexPath, String tokenFilterFile, boolean positional){
+        // Constructor Method to initialize the Fields Collection
         super(indexPath, tokenFilterFile, positional);
-        {
-             // Constructor Method to initialize the Fields Collection
-         initFields();
-        }
+        initFields();
     }
 
-    private String extractContent(JsonElement contentElement)
+    public void finished  ()
     {
-        // This Function is Used to get the contents of current Paragraph fields
-        String result = "";
-        if (contentElement.isJsonObject()) {
-            if (contentElement.getAsJsonObject().has("content"))
-                result = contentElement.getAsJsonObject().get("content").toString();
-           // else if (jObject.has("fullcaption"))
-             //   result = jObject.get("fullcaption").toString();
-            } // End IF
-        return result;
-    }
+        // This function is used to release the memory of the current instance
+        super.finished();
+        doc.clear();
+        // String Fields (One Word)
+        fldDocID =  null;
+        fldPubDate = null;
+        fldKicker = null;
+        fldArticle_URL = null;
+        // Term Vector Fields
+        fldTitle = null;
+        fldAll = null;
+        fldBiAll = null;
+        fldContent = null;
+        fldFullCaption = null;
+        fldAuthor = null;
+    } // End Function
 
-    private Field getField (String fldName)
+    private String setFieldValue (Field fld , JsonElement jElement , String elementName)
     {
-        // This Function is to get a Field Given its name
-
-        Field result = fields.get(0);
-        for (int i = 0 ; i < fields.size() ; i++)
-            if (fields.get(i).name() == fldName)
-                {
-                    result = fields.get(i);
-                    break;
-                }
-        return  result;
-    }
+           /*
+           This Function is Used to
+           1- Extract The Value from input Json Element By its Name
+           2- Set The Value to the Given Field
+           3- Add The Given Field to the Current Document
+           4- Add the value to the public All Variable
+           */
+        String value;
+        value = jElement.getAsJsonObject().get(elementName).toString().trim().replaceAll("\"", "");
+        if (elementName.equals("published_date"))
+            value = getPubDate(value);
+        all += value + " ";
+        fld.setStringValue(value);
+        doc.add(fld);
+        return value;
+    } // End Function
 
     private String getPubDate (String inDate)
     {
@@ -121,7 +146,7 @@ public class WapoDocumentIndexer extends DocumentIndexer {
              result = df.format(aDate);
          }
         return result;
-    }
+    } // end Function
 
    public void parseLine(String line)
     {
@@ -129,133 +154,105 @@ public class WapoDocumentIndexer extends DocumentIndexer {
         This Function is used to  :
         1- Parse a Single Json Line From Washingtop POST (WAPO)  Corpus Document
         2- Extract the required properties from the Line
-        3- Add The Properties to Corpus Fields Collection
-        4- Add The corpusFields Collection in the Corpus Document inside the Fields Collection
+        3- Add The Properties to Corpus Fields
+        4- Insert The corpusFields Collection to the Corpus Document
         5- Index The Resultant Document
 
-        It is very important to mention the order of Fields in the Corpus Document Line
-        1- Document Number (id)
-        2- Title
-        3- PubDate
-        4- Content ID
-        5- Content
-        6- ALL (RAW)
+        The Fields To Index in Each Lines are :
+            1- DocID
+            2- Title
+            3- Author
+            4- Publish Date
+            5- Contents
+            6- Full_Caption
+            7- Article_URL
+            8- Kicker
+            9- All
         */
         // Local Variables
-        Document doc;
-        Field fld ;
         JsonParser jParser;
         JsonElement jElement ;
-        JsonArray contentField;
-        String  fldName , // Current Field Name
-                fldValue, // Current Field Value
-                allValue, // Gathering All Value
-                content , // Current Content
-                StaticAllValue,
-                outLine ,
-                staticFldNames[] = {Lucene4IRConstants.FIELD_DOCNUM ,
-                                    Lucene4IRConstants.FIELD_TITLE
-                                    , Lucene4IRConstants.FIELD_PUBDATE };
 
-        short i , contentID ; // iterator
+        String contentValue , jElementInfo,docid , title,
+                elementNameID = "id",
+                elementNameTitle = "title",
+                elementNameAuthor = "author",
+                elementNamePubDate = "published_date",
+                elementNameFullCaption = "fullcaption",
+                elementNameContent = "contents",
+                elementNameArticleURL = "article_url",
+                elementTypeContent = "sanitized_html";
+
         // Parse The input Line
         jParser = new JsonParser();
         jElement = jParser.parse(line);
-        StaticAllValue = "";
-        outLine = "";
+        JsonArray jContentElements;
         // Check If the Line is a Valid Json Object
         if (jElement.isJsonObject()) {
+            // Add Values to Fields
+            // Use Field Names identical to json File Field Names that might not be similar to our field names
 
-            /* Fill Main Stable Fields
-            1- DocNum
-            2- Title
-            3- PubDate
+            // Set child-Root Node Fields ( Directly Under Root )
+            // DocID Field
+            all = "";
+            docid = setFieldValue(fldDocID,jElement,elementNameID);
 
-            and Save Static Fields ( Standard Fields For All Contents )
-            and Make StaticAllValue from Combining Static Fields
-            */
+            // Title Field
+            title = setFieldValue(fldTitle,jElement,elementNameTitle);
+            // Author Field
+            setFieldValue(fldAuthor,jElement,elementNameAuthor);
+            // Publish Date Field
+            setFieldValue(fldPubDate,jElement,elementNamePubDate);
 
-            for (i = 0; i < staticFldNames.length; i++) {
-                fldName = staticFldNames[i];
-                if (i == 2)
-                    // PubDate
-                {
-                    fldValue = jElement.getAsJsonObject().get("published_date").toString();
-                    fldValue = getPubDate(fldValue);
-                } // End IF
-                else
-                {
-                    fldValue = jElement.getAsJsonObject().get(fldName).toString().replaceAll("\"","");
-                    outLine += fldName + ": " + fldValue + ", ";
-                }
-                StaticAllValue += fldValue + " ";
-                fld = getField(fldName);
-                fld.setStringValue(fldValue);
-            } // End For
+            // Article_URL Field
+            setFieldValue(fldArticle_URL,jElement,elementNameArticleURL);
 
-            // Get Contents Array
-            contentField = jElement.getAsJsonObject().get(Lucene4IRConstants.FIELD_BODY).getAsJsonArray();
-            contentID = 0;
-            outLine = lineNumber++ + "- Indexing " + contentField.size() +
-                    " contents for " + outLine.substring(0 , outLine.length() - 2);
-            System.out.println(outLine);
-            for (i = 0; i < contentField.size(); i++) {
-                // Get Current Content
-                content = extractContent(contentField.get(i));
-                // If Content is not Available Skip
-                if (content.isEmpty())
-                    continue;
+            // Get Values From Child-Contents Nodes ( Nodes Under Contents Node )
+            jContentElements = jElement.getAsJsonObject().get(elementNameContent).getAsJsonArray();
+            // Change Contents Group Name Back to Single Content Name
+            elementNameContent = "content";
 
-                // Insert Static Fields
-                    doc = new Document();
-                for (int j = 0 ; j < staticFldNames.length ; j++ )
-                {
-                    fld = getField(staticFldNames[j]);
-                    doc.add(fld);
-                } // End For
+            // Kicker is always The First Child Node Under Contents Node
+            jElement = jContentElements.get(0);
+            setFieldValue(fldKicker,jElement,elementNameContent);
 
-                allValue = StaticAllValue;
+            // Remove Kicker Element
+            jContentElements.remove(0);
 
-                // Insert Content ID Field
-                fldName = "contentID";
-                fld = getField(fldName);
-                fldValue = String.valueOf(contentID++);
-                allValue += fldValue + " ";
-                fld.setStringValue(fldValue);
-                doc.add(fld);
-
-                // Insert Content Field
-                fldName = contentFieldName;
-                fld = getField(fldName);
-                fldValue = content;
-                allValue += fldValue + " ";
-                fld.setStringValue(fldValue);
-                doc.add(fld);
-
-                // Insert All Field
-                fldName = Lucene4IRConstants.FIELD_RAW;
-                fld = getField(fldName);
-                fldValue = allValue.trim();
-                fld.setStringValue(fldValue);
-                doc.add(fld);
-
-
-                addDocumentToIndex(doc);
-
-            } // End For
-        } // End IF jElement.isJsonObject()
-    }
+            contentValue = "";
+            for (JsonElement element : jContentElements) {
+                jElementInfo = element.getAsJsonObject().get("type").toString().replaceAll("\"", "");
+                // Add Content Field
+                if (jElementInfo.equals(elementTypeContent))
+                    contentValue += element.getAsJsonObject().get(elementNameContent).toString().replaceAll("\"", "")
+                                 + " ";
+                else if (element.getAsJsonObject().has(elementNameFullCaption))
+                    // Add Full Caption Field
+                    setFieldValue(fldFullCaption,element,elementNameFullCaption);
+            }; // End For
+            contentValue = Jsoup.parse(contentValue.trim()).text();
+            fldContent.setStringValue(contentValue);
+            doc.add(fldContent);
+            all += contentValue;
+            fldAll.setStringValue(all.trim());
+            doc.add(fldAll);
+            System.out.println(String.format("Adding document: %s Title %s" , docid , title));
+            addDocumentToIndex(doc);
+        } // End if (jElement.isJsonObject())
+    } // End Function
         public void indexDocumentsFromFile (String fileName){
+        /*
+        This method is used to Read The Input Corpus File and Line by Line than
+        Parse each document in each line
+         */
             // Local Variables for a Single Line and Line Separator
             String line;
             // Read The Input File into a Buffer
             try {
                 BufferedReader br = openDocumentFile(fileName);
-                lineNumber = 1;
                 // Iterate Through Lines and Parse Lines each by each
                 while ((line = br.readLine()) != null)
                     parseLine(line); // Send The Current Line To The Parse Line Function
-
             }  // End Try
             catch (Exception e) {
                 e.printStackTrace();

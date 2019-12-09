@@ -283,13 +283,18 @@ public class StatisticsIndex {
         for (int i = start ; i < end ; i++)
         {
            trs = reader.getTermVector(i,fldName);
+           line = reader.document(i).get(fldName);
+           checkAnalyzer(line,"Unigram");
+            checkAnalyzer(line,"Bigram");
+            checkAnalyzer(line,"Combined");
+
            currentTermsCount = trs.size();
             line = " " + i + "          " + currentTermsCount;
             printLine(line);
             totalTerms += currentTermsCount;
         } // End For
         line = "Total Terms : " + totalTerms + "\n" +
-                "Average Document Length : " + totalTerms * 1.0 /maxdoc ;
+                "Average Document Length : " + totalTerms * 1.0 /reader.maxDoc() ;
         printLine(line);
     }  // End Function
 
@@ -376,13 +381,14 @@ private void  checkAnalyzer (String all , String indexType) throws Exception
         Core17UnigramIndex Core17BigramIndex Core17CombinedIndex Core17FieldedIndex */
 
         sts.indexesFolder = "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\BiasMeasurementExperiments\\Indexes\\";
-        sts.indexName =  "Core17CombinedIndex";
+        //sts.indexesFolder = "";
+        sts.indexName =  "AquaintCombinedIndex";
         sts.fldName = Lucene4IRConstants.FIELD_RAW;
         sts.outDir = "C:\\Users\\kkb19103\\Desktop\\CheckTerms\\";
         sts.screenOutput = true;
         sts.maxdoc = 0;
         try {
-            String all = "This is my house and I am going to the kitchen ";
+            String all = "<span class=\\\"dateline\\\">NEW ORLEANS —</span> Whenever a <a href=\\\"http://www.washingtonpost.com/blogs/hokies-journal\\\" title=\\\"www.washingtonpost.com\\\">Virginia Tech</a> offensive coach is asked how the most prolific receiving duo in school history came to be, inevitably the first road game in 2008 against North Carolina comes up.";
             sts.checkAnalyzer(all,"Unigram");
             sts.checkAnalyzer(all,"Bigram");
             sts.checkAnalyzer(all,"Combined");
@@ -390,7 +396,7 @@ private void  checkAnalyzer (String all , String indexType) throws Exception
           //  sts.printDocLength(0);
 
            // sts.printTermList(1,false);
-          // sts.printTermCount(-1);
+          // sts.printTermCount(0);
            // sts.printDocCount();
            // sts.printDocLength(Lucene4IRConstants.FIELD_RAW);
           //  sts.printLeavesCount();

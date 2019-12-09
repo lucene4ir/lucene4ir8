@@ -6,10 +6,15 @@ import lucene4ir.parse.CSVParser;
 
 import lucene4ir.utils.CrossDirectoryClass;
 import lucene4ir.utils.XMLTextParser;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.store.FSDirectory;
 
 import javax.xml.bind.JAXB;
 import java.io.*;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class RunExperimentSet {
     private ExperimentSetParams p;
@@ -21,7 +26,7 @@ public class RunExperimentSet {
             tokenFilterFile = combinedFilter,*/
             defaultCSVKey;
     private CSVParser csvPaser;
-
+    HashMap<String, Double> docMap;
     private String getBashLine(String b)
     {
         String qrelFile , trecEvalLine , corpus;
@@ -46,6 +51,26 @@ public class RunExperimentSet {
                 result = "Aquaint";
         return result;
     }
+
+    private void initDocumentMap() throws Exception {
+
+        docMap = new HashMap<String, Double>();
+        // Initialize Document Hash MAP (docid , r = 0)
+        IndexReader reader;
+        long docCount;
+        String docid;
+        final String docIDField = Lucene4IRConstants.FIELD_DOCNUM;
+        reader = DirectoryReader.open(FSDirectory.open(Paths.get(p.indexName)));
+        docCount = reader.maxDoc();
+
+        for (int i = 0; i < docCount; i++)
+        {
+            docid = reader.document(i).get(docIDField);
+            docMap.put(docid,0.0);
+        }
+        reader.close();
+    } // End Function
+
     private void fillAutoParameters()
     {
         /*
@@ -182,7 +207,7 @@ public class RunExperimentSet {
         parser.setTagValue("c",p.maxResults);
         parser.setTagValue("retType",retType);
         parser.save();
-        RetrievabilityCalculatorApp rcApp = new RetrievabilityCalculatorApp(p.retrievabilityParamsFile);
+        RetrievabilityCalculatorApp rcApp = new RetrievabilityCalculatorApp(p.retrievabilityParamsFile,docMap);
         rcApp.calculate();
         return runRCStatistics(b,retType);
     } // End Function
@@ -329,11 +354,21 @@ public class RunExperimentSet {
 
 
        for (int i = 0 ; i < indexNames.length ; i++)
+       {
+           if (i == 0 | i == 3) {
+               try {
+                   initDocumentMap();
+               } catch (Exception e) {
+                   e.printStackTrace();
+               }
+           }
            for (int j=0 ; j < maxResults.length ; j++ )
            {
                fillExperimentParameterFile(paramFileName , indexNames[i] , maxResults[j]);
                runExperimentFile(paramFileName);
-          }
+           }
+       }
+
 
        // runExperimentFile(paramFileName);
     }

@@ -164,7 +164,7 @@ public class CommonCoreDocumentIndexer extends DocumentIndexer {
             fldContent = new TextField(Lucene4IRConstants.FIELD_BODY, "", Field.Store.YES);
             fldAll = new TextField(Lucene4IRConstants.FIELD_RAW, "", Field.Store.YES);
             if (fielded())
-                fldBiAll = new lucene4ir.indexer.TermVectorEnabledTextField(tokenizedFields.getFieldName(0), "", Field.Store.YES);
+                fldBiAll = new TextField(tokenizedFields.getFieldName(0), "", Field.Store.YES);
         } // End Else
 
 

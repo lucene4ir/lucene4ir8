@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <fields>
-    <field>
+    <!--<field>
         <fieldName>raw</fieldName>
-       <!-- <tokenFilterFile>params/index/TokenFilterFile_Bigram.xml</tokenFilterFile>-->
+       &lt;!&ndash; <tokenFilterFile>params/index/TokenFilterFile_Bigram.xml</tokenFilterFile>&ndash;&gt;
         <fieldBoost>0.5</fieldBoost>
-    </field>
+    </field>-->
 
     <field>
         <fieldName>biraw</fieldName>
-     <!--   <tokenFilterFile>params/index/TokenFilterFile_Bigram.xml</tokenFilterFile>-->
+        <tokenFilterFile>params/index/TokenFilterFile_Bigram.xml</tokenFilterFile>
         <fieldBoost>0.5</fieldBoost>
     </field>
 </fields>

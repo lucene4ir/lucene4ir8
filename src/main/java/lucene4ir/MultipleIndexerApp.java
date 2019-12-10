@@ -13,7 +13,12 @@ public class MultipleIndexerApp {
                 uniTokenFilterFile = "params/index/TokenFilterFile_Unigram.xml",
                 combinedTokenFilterFile = "params/index/TokenFilterFile_Combinedgram.xml";
 
-        if (indexName.startsWith("Core17"))
+        if (indexName.startsWith("WAPO"))
+        {
+            fileList = "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\LUCENE\\anserini-master\\data\\WAPO\\WashingtonPost.v2\\data";
+            indexType = "WAPO";
+        }
+        else if (indexName.startsWith("Core17"))
         {
             fileList = "C:/Users/kkb19103/Desktop/My Files 07-08-2019/LUCENE/anserini-master/data/nyt_corpus/data";
             indexType = "CommonCore";
@@ -32,7 +37,9 @@ public class MultipleIndexerApp {
     } // End Function
 
     private void createIndexerByName(String indexName) {
+        String  outPutFolder = "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\BiasMeasurementExperiments\\Indexes\\";
         setIndexerParameters(indexName);
+
         XMLTextParser parser = new XMLTextParser(indexerAppFile);
         parser.setTagValue("indexName", indexName);
         parser.setTagValue("tokenFilterFile", filterFile);
@@ -62,15 +69,12 @@ public class MultipleIndexerApp {
     }
 
     public static void main(String[] args) {
-
       /*  String[] indexNames = { "Core17UnigramIndex", "Core17BigramIndex" ,"Core17CombinedIndex"
                 ,"AquaintUnigramIndex" , "AquaintBigramIndex","AquaintCombinedIndex"};*/
 
-        String[] indexNames = { "Core17FieldedIndex", "AquaintFieldedIndex"};
+        String[] indexNames = { "WAPOUnigramIndex", "WAPOBigramIndex","WAPOCombinedIndex"};
         MultipleIndexerApp mn = new MultipleIndexerApp();
         for (int i = 0; i < indexNames.length; i++)
           mn.createIndexerByName(indexNames[i]);
-      //  mn.runIndexerByFile(mn.indexerAppFile);
-
     } // End function
 }

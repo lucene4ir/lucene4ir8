@@ -41,6 +41,7 @@ public class WapoDocumentIndexer extends DocumentIndexer {
             fldAll,
             fldBiAll;
     String all;
+    int lineNum;
     private Document doc;
 
     private void initFields()
@@ -172,7 +173,7 @@ public class WapoDocumentIndexer extends DocumentIndexer {
         // Local Variables
         JsonParser jParser;
         JsonElement jElement ;
-
+        boolean captionAdded;
         String contentValue , jElementInfo,docid , title,
                 elementNameID = "id",
                 elementNameTitle = "title",
@@ -220,6 +221,7 @@ public class WapoDocumentIndexer extends DocumentIndexer {
             jContentElements.remove(0);
 
             contentValue = "";
+            captionAdded = false;
             for (JsonElement element : jContentElements) {
                 jElementInfo = element.getAsJsonObject().get("type").toString().replaceAll("\"", "");
                 // Add Content Field
@@ -228,15 +230,31 @@ public class WapoDocumentIndexer extends DocumentIndexer {
                                  + " ";
                 else if (element.getAsJsonObject().has(elementNameFullCaption))
                     // Add Full Caption Field
+                {
                     setFieldValue(fldFullCaption,element,elementNameFullCaption);
+                    captionAdded = true;
+                } // End if (element.getAsJsonObject().has(elementNameFullCaption))
+
             }; // End For
+            if (!captionAdded)
+            {
+                fldFullCaption.setStringValue("");
+                doc.add(fldFullCaption);
+            }
             contentValue = Jsoup.parse(contentValue.trim()).text();
             fldContent.setStringValue(contentValue);
             doc.add(fldContent);
             all += contentValue;
-            fldAll.setStringValue(all.trim());
+            all = all.trim();
+            fldAll.setStringValue(all);
             doc.add(fldAll);
-            System.out.println(String.format("Adding document: %s Title %s" , docid , title));
+            if (fielded())
+                {
+                    fldBiAll.setStringValue(all);
+                    doc.add(fldBiAll);
+                } // End if
+            System.out.println(String.format("Adding document:  Number:%d - ID : %s  - Title %s" ,
+                                             ++lineNum , docid , title));
             addDocumentToIndex(doc);
         } // End if (jElement.isJsonObject())
     } // End Function
@@ -247,12 +265,16 @@ public class WapoDocumentIndexer extends DocumentIndexer {
          */
             // Local Variables for a Single Line and Line Separator
             String line;
+           // int lineNum = 1;
             // Read The Input File into a Buffer
             try {
                 BufferedReader br = openDocumentFile(fileName);
                 // Iterate Through Lines and Parse Lines each by each
+                lineNum = 0;
                 while ((line = br.readLine()) != null)
-                    parseLine(line); // Send The Current Line To The Parse Line Function
+                //    if (lineNum++ == 1662)
+                        parseLine(line); // Send The Current Line To The Parse Line Function
+
             }  // End Try
             catch (Exception e) {
                 e.printStackTrace();

@@ -27,18 +27,6 @@ public class RunExperimentSet {
             defaultCSVKey;
     private CSVParser csvPaser;
     HashMap<String, Double> docMap;
-    private String getBashLine(String b)
-    {
-        String qrelFile , trecEvalLine , corpus;
-        corpus = getCorpus(p.indexName);
-        if (corpus.equals("Core17"))
-            qrelFile = "307-690.qrels";
-        else
-            qrelFile = "trec2005.aquaint.qrels";
-        trecEvalLine  = String.format("~/trecEval/trec_eval ~/trecEval/Qrels/%s ./result%s.res > ./trec%s.trec\n" ,
-                qrelFile,b,b);
-        return trecEvalLine;
-    }
 
     private String getCorpus (String indexName)
     {
@@ -47,12 +35,36 @@ public class RunExperimentSet {
         if (!indexName.isEmpty())
             if (indexName.contains("Core17"))
                 result = "Core17";
+            else  if (indexName.contains("WAPO"))
+                result = "WAPO";
             else
                 result = "Aquaint";
         return result;
-    }
+    } // End Function
 
-    private void initDocumentMap() throws Exception {
+
+    private String getBashLine(String b)
+    {
+        String qrelFile , trecEvalLine , corpus;
+        corpus = getCorpus(p.indexName);
+        switch (corpus)
+        {
+            case "Core17":
+                qrelFile = "307-690.qrels";
+                break;
+            case "WAPO":
+                qrelFile = "qrels.core18.txt";
+                break;
+            default:
+                qrelFile = "trec2005.aquaint.qrels";
+        } // End switch
+
+        trecEvalLine  = String.format("~/trecEval/trec_eval ~/trecEval/Qrels/%s ./result%s.res > ./trec%s.trec\n" ,
+                qrelFile,b,b);
+        return trecEvalLine;
+    } // End Function
+
+   /* private void initDocumentMap() throws Exception {
 
         docMap = new HashMap<String, Double>();
         // Initialize Document Hash MAP (docid , r = 0)
@@ -69,7 +81,7 @@ public class RunExperimentSet {
             docMap.put(docid,0.0);
         }
         reader.close();
-    } // End Function
+    } // End Function*/
 
     private void fillAutoParameters()
     {
@@ -355,20 +367,19 @@ public class RunExperimentSet {
 
        for (int i = 0 ; i < indexNames.length ; i++)
        {
-           if (i == 0 | i == 3) {
+          /* if (i == 0 | i == 3) {
                try {
                    initDocumentMap();
                } catch (Exception e) {
                    e.printStackTrace();
                }
-           }
+           }*/
            for (int j=0 ; j < maxResults.length ; j++ )
            {
                fillExperimentParameterFile(paramFileName , indexNames[i] , maxResults[j]);
                runExperimentFile(paramFileName);
-           }
-       }
-
+           } // End For J
+       } // End For I
 
        // runExperimentFile(paramFileName);
     }

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <indexParams>
-    <indexName>Core17FieldedIndex</indexName>
-    <fileList>C:/Users/kkb19103/Desktop/My Files 07-08-2019/LUCENE/anserini-master/data/nyt_corpus/data</fileList>
-    <indexType>CommonCore</indexType>
+    <indexName>WAPOUnigramIndex</indexName>
+    <fileList>C:\Users\kkb19103\Desktop\My Files 07-08-2019\LUCENE\anserini-master\data\WAPO\WashingtonPost.v2\data</fileList>
+    <indexType>WAPO</indexType>
     <tokenFilterFile>params/index/TokenFilterFile_Unigram.xml</tokenFilterFile>
     <recordPositions>true</recordPositions>
-    <fieldsFile>params/fields.xml</fieldsFile>
+    <fieldsFile></fieldsFile>
 </indexParams>

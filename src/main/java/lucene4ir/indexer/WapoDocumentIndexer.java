@@ -1,17 +1,16 @@
 /**
  *
- * This Class is Used to index CAR - CAST - CommonCore 2018 (WAPO) data files
+ * This Class is Used to index CommonCore 2018 (WAPO) data files
  *    INDEXERS - GITHUB REFERENCE PAGE
  *     URL : https://github.com/ABDULAZIZALQATAN/Indexers
- * Created by Abdulaziz on 19/03/2019.
- * Edited by Abdulaziz on 28/06/2019.
+ * Created by Abdulaziz on 10/12/2019.
+ * Edited by Abdulaziz on 11/12/2019.
  */
 
 package lucene4ir.indexer;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lucene4ir.Lucene4IRConstants;
 import org.apache.commons.lang3.StringUtils;
@@ -19,13 +18,11 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
-import org.apache.lucene.search.DocValuesNumbersQuery;
 import org.jsoup.Jsoup;
 
 import java.io.BufferedReader;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 
 
 public class WapoDocumentIndexer extends DocumentIndexer {
@@ -129,8 +126,8 @@ public class WapoDocumentIndexer extends DocumentIndexer {
         if (elementName.equals("published_date"))
             value = getPubDate(value);
         all += value + " ";
-        fld.setStringValue(value);
-        doc.add(fld);
+      //  fld.setStringValue(value);
+       // doc.add(fld);
         return value;
     } // End Function
 
@@ -236,14 +233,14 @@ public class WapoDocumentIndexer extends DocumentIndexer {
                 } // End if (element.getAsJsonObject().has(elementNameFullCaption))
 
             }; // End For
-            if (!captionAdded)
+           /* if (!captionAdded)
             {
                 fldFullCaption.setStringValue("");
                 doc.add(fldFullCaption);
-            }
+            }*/
             contentValue = Jsoup.parse(contentValue.trim()).text();
-            fldContent.setStringValue(contentValue);
-            doc.add(fldContent);
+           // fldContent.setStringValue(contentValue);
+           // doc.add(fldContent);
             all += contentValue;
             all = all.trim();
             fldAll.setStringValue(all);

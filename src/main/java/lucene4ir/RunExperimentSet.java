@@ -13,6 +13,8 @@ import org.apache.lucene.store.FSDirectory;
 import javax.xml.bind.JAXB;
 import java.io.*;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -26,7 +28,6 @@ public class RunExperimentSet {
             tokenFilterFile = combinedFilter,*/
             defaultCSVKey;
     private CSVParser csvPaser;
-    HashMap<String, Double> docMap;
 
     private String getCorpus (String indexName)
     {
@@ -98,13 +99,14 @@ public class RunExperimentSet {
         outPutFolder = "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\BiasMeasurementExperiments";
 
         C = "C" + p.maxResults;
-        if (p.maxResults.equals("100"))
+        if (validRetrievability())
+      //  if (p.maxResults.equals("100"))
             qryCount = "300K";
         else
             qryCount = "50";
 
         corpus = getCorpus(p.indexName);
-        p.queryFile = String.format("%s/%s/Queries/%s.qry" , outPutFolder, corpus,qryCount);
+        p.queryFile = String.format("%s/%s/Queries/%s.qry" , outPutFolder, corpus , qryCount);
 
         if (p.indexName.contains("Combined"))
             indexFolder = "CombinedIndex";
@@ -115,11 +117,10 @@ public class RunExperimentSet {
         else if (p.indexName.contains("Fielded"))
             indexFolder = "FieldedIndex";
 
-
         //   Sample Output
         //   out\Core17\UnigramIndex\50\C1000\CombinedgramFilter
-        p.outputDir = String.format("%s\\%s\\%s\\%s\\%s" ,
-                outPutFolder , corpus , indexFolder , qryCount , C);
+        p.outputDir = String.format("%s/%s/%s/%s/%s/%s" ,
+                outPutFolder , corpus , p.model , indexFolder , qryCount , C);
         csvFile = outPutFolder + "/out.csv";
         csvPaser = new CSVParser();
         csvPaser.readFromFile(csvFile);
@@ -143,11 +144,12 @@ public class RunExperimentSet {
         pr.write(outText);
         pr.close();
     }
-    private void fillExperimentParameterFile(String fileName , String indexName , String maxResults)
+    private void fillExperimentParameterFile(String fileName , String model , String indexName , String maxResults)
     {
         XMLTextParser parser = new XMLTextParser(fileName);
         parser.setTagValue("indexName",indexName);
         parser.setTagValue("maxResults",maxResults);
+        parser.setTagValue("model",model);
         parser.save();
     } // End Function
 
@@ -219,7 +221,7 @@ public class RunExperimentSet {
         parser.setTagValue("c",p.maxResults);
         parser.setTagValue("retType",retType);
         parser.save();
-        RetrievabilityCalculatorApp rcApp = new RetrievabilityCalculatorApp(p.retrievabilityParamsFile,docMap);
+        RetrievabilityCalculatorApp rcApp = new RetrievabilityCalculatorApp(p.retrievabilityParamsFile);
         rcApp.calculate();
         return runRCStatistics(b,retType);
     } // End Function
@@ -249,11 +251,14 @@ public class RunExperimentSet {
         return defaultCSVKey + retB + "," + b;
     }
 
+    private boolean validRetrievability()
+    {
+        return p.maxResults.equals("100");
+    }
     private void runALLRC (String b)
     {
         String result ;
         // Calculation
-
         result = runRCExperiment(b,"Cumulative");
         // *** Statistics ***
         csvPaser.setRet(result);
@@ -262,6 +267,11 @@ public class RunExperimentSet {
         result = runRCExperiment(b,"Gravity");
         csvPaser.setKey(getNewKey("0.5",b));
         csvPaser.setRet(result);
+}
+
+private String getCurrentTime() {
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy-HH:mm:ss");
+        return LocalDateTime.now().format(dtf);
     }
 
     private String[] getbRange()
@@ -269,8 +279,10 @@ public class RunExperimentSet {
         /*
         Get Coefficient Values based on input model
          */
-        String[] BM25Set = {"0.1", "0.2","0.3","0.4","0.5","0.6","0.7","0.8","0.9","1.0"},
+        String[]
+                 BM25Set = {"0.1", "0.2","0.3","0.4","0.5","0.6","0.7","0.8","0.9","1.0"},
                  PL2Set = {"0.1", "0.5", "1.0", "5.0", "10", "15", "20", "50"},
+                 //PL2Set = {"0.1", "0.5"},
                  LMDSet = {"100","200","300","400","500","600","700","800","900","1000","5000"},
                  result;
         if (p.model.equals("BM25"))
@@ -284,7 +296,7 @@ public class RunExperimentSet {
     private void processExperimentSet () throws Exception
     {
         // This function is used to process the whole experiment Set
-         String b , retB  = "0", bashLines = "" , line  ;
+         String b , retB  = "0", bashLines = ""  ;
 
          String bRange[] = getbRange();
 
@@ -298,15 +310,18 @@ public class RunExperimentSet {
             {
                 case "All":
                     csvPaser.setRes(runRetrievalExperiment(b));
-                    bashLines += getBashLine(b);
-                    runALLRC(b);
+                    if (validRetrievability())
+                        runALLRC(b);
+                    else
+                        bashLines += getBashLine(b);
                     break;
                 case "AllRC":
                     runALLRC(b);
                     break;
                 case "Cumulative":
                 case "Gravity":
-                    csvPaser.setRet(runRCExperiment(b,p.exType));
+                    if (validRetrievability())
+                        csvPaser.setRet(runRCExperiment(b,p.exType));
                     break;
 
                 case "Retrieval":
@@ -320,12 +335,15 @@ public class RunExperimentSet {
                     if (p.maxResults.equals("1000"))
                         csvPaser.setPerformance(getPerformanceValues(b));
                     csvPaser.setRes(runRetrievalStatistics(b));
-                    csvPaser.setRet(runRCStatistics(b,"Cumulative"));
-                    csvPaser.addCSVLineToMap();
-                    csvPaser.setKey(getNewKey("0.5",b));
-                    csvPaser.setRet(runRCStatistics(b,"Gravity"));
+                    if (validRetrievability())
+                    {
+                        csvPaser.setRet(runRCStatistics(b,"Cumulative"));
+                        csvPaser.addCSVLineToMap();
+                        csvPaser.setKey(getNewKey("0.5",b));
+                        csvPaser.setRet(runRCStatistics(b,"Gravity"));
+                    } // End if
             } // End Switch
-            line = csvPaser.addCSVLineToMap();
+            csvPaser.addCSVLineToMap();
 
         } // End For
 
@@ -338,9 +356,10 @@ public class RunExperimentSet {
     private void runExperimentFile (String fileName)
     {
         try {
+            System.out.println("Experiment " + fileName + " started at : " + getCurrentTime());
             readParamsFromFile(fileName);
             processExperimentSet();
-            System.out.println("Experiment " + fileName + " is done successfully");
+            System.out.println("Experiment " + fileName + " is done successfully at : " + getCurrentTime());
          } // End Try
             catch (Exception e) {
             e.printStackTrace();
@@ -357,29 +376,34 @@ public class RunExperimentSet {
 
     private void runCalculatedList ()
     {
+        int t = 0;
         String paramFileName =  "params/BMExperimentSets/Experiment2.xml";
        String[] indexNames = {
-               "AquaintBigramIndex","AquaintCombinedIndex","AquaintUnigramIndex" , "AquaintFieldedIndex",
-               "Core17UnigramIndex","Core17BigramIndex","Core17CombinedIndex"  , "Core17FieldedIndex"
-               };
-       String maxResults[] = {"10"};
+              /* "AquaintBigramIndex","AquaintCombinedIndex","AquaintUnigramIndex" , "AquaintFieldedIndex",
+               "Core17UnigramIndex","Core17BigramIndex","Core17CombinedIndex"  , "Core17FieldedIndex"*/
+              // "WAPOUnigramIndex","WAPOBigramIndex","WAPOCombinedIndex"  , "WAPOFieldedIndex"
+               "WAPOUnigramIndex","WAPOBigramIndex","WAPOCombinedIndex"  , "WAPOFieldedIndex"
+       };
+       String maxResults[] = {"100","1000"};
+       //String models[] = {"LMD","PL2"};
+        String models[] = {"PL2","LMD"};
 
-
-       for (int i = 0 ; i < indexNames.length ; i++)
+       for (int m = 0 ; m < models.length ; m++)
        {
-          /* if (i == 0 | i == 3) {
-               try {
-                   initDocumentMap();
-               } catch (Exception e) {
-                   e.printStackTrace();
-               }
-           }*/
-           for (int j=0 ; j < maxResults.length ; j++ )
+           if (m == 0)
+               t=2;
+           else
+               t=0;
+           for ( ; t < indexNames.length ; t++)
            {
-               fillExperimentParameterFile(paramFileName , indexNames[i] , maxResults[j]);
-               runExperimentFile(paramFileName);
-           } // End For J
-       } // End For I
+               for (int j=0 ; j < maxResults.length ; j++ )
+               {
+                   fillExperimentParameterFile(paramFileName , models[m] , indexNames[t] , maxResults[j]);
+                   runExperimentFile(paramFileName);
+               } // End For J
+           } // End For I
+       }
+
 
        // runExperimentFile(paramFileName);
     }
@@ -391,6 +415,7 @@ public class RunExperimentSet {
                     result;
         RunExperimentSet re = new RunExperimentSet();
         re.runCalculatedList();
+        // re.runExperimentFile(sourceFile);
 
     } // End Function Main
 } // End Class

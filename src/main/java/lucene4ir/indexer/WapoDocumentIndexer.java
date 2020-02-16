@@ -112,6 +112,14 @@ public class WapoDocumentIndexer extends DocumentIndexer {
         fldAuthor = null;
     } // End Function
 
+
+    private String getJsonElementValue (JsonElement jElement , String elementName)
+    {
+        String result = "";
+        if (jElement.isJsonObject())
+           result = jElement.getAsJsonObject().get(elementName).toString().trim().replaceAll("\"", "");
+        return result;
+    }
     private String setFieldValue (Field fld , JsonElement jElement , String elementName)
     {
            /*
@@ -121,13 +129,16 @@ public class WapoDocumentIndexer extends DocumentIndexer {
            3- Add The Given Field to the Current Document
            4- Add the value to the public All Variable
            */
-        String value;
-        value = jElement.getAsJsonObject().get(elementName).toString().trim().replaceAll("\"", "");
-        if (elementName.equals("published_date"))
-            value = getPubDate(value);
-        all += value + " ";
-      //  fld.setStringValue(value);
-       // doc.add(fld);
+        String value = "";
+        value = getJsonElementValue(jElement,elementName);
+        if (!value.isEmpty())
+        {
+            if (elementName.equals("published_date"))
+                value = getPubDate(value);
+            all += value + " ";
+            fld.setStringValue(value);
+            doc.add(fld);
+        } // End if
         return value;
     } // End Function
 
@@ -170,12 +181,13 @@ public class WapoDocumentIndexer extends DocumentIndexer {
         // Local Variables
         JsonParser jParser;
         JsonElement jElement ;
-        boolean captionAdded;
+        boolean captionAdded , kickerAdded;
         String contentValue , jElementInfo,docid , title,
                 elementNameID = "id",
                 elementNameTitle = "title",
                 elementNameAuthor = "author",
                 elementNamePubDate = "published_date",
+                elementNameKicker = "kicker",
                 elementNameFullCaption = "fullcaption",
                 elementNameContent = "contents",
                 elementNameArticleURL = "article_url",
@@ -193,6 +205,7 @@ public class WapoDocumentIndexer extends DocumentIndexer {
             // Set child-Root Node Fields ( Directly Under Root )
             // DocID Field
             all = "";
+            doc.clear();
             docid = setFieldValue(fldDocID,jElement,elementNameID);
 
             // Title Field
@@ -210,37 +223,45 @@ public class WapoDocumentIndexer extends DocumentIndexer {
             // Change Contents Group Name Back to Single Content Name
             elementNameContent = "content";
 
-            // Kicker is always The First Child Node Under Contents Node
-            jElement = jContentElements.get(0);
-            setFieldValue(fldKicker,jElement,elementNameContent);
-
-            // Remove Kicker Element
-            jContentElements.remove(0);
-
             contentValue = "";
             captionAdded = false;
+            kickerAdded = false;
             for (JsonElement element : jContentElements) {
-                jElementInfo = element.getAsJsonObject().get("type").toString().replaceAll("\"", "");
-                // Add Content Field
-                if (jElementInfo.equals(elementTypeContent))
-                    contentValue += element.getAsJsonObject().get(elementNameContent).toString().replaceAll("\"", "")
-                                 + " ";
-                else if (element.getAsJsonObject().has(elementNameFullCaption))
-                    // Add Full Caption Field
+                if (element.isJsonObject())
                 {
-                    setFieldValue(fldFullCaption,element,elementNameFullCaption);
-                    captionAdded = true;
-                } // End if (element.getAsJsonObject().has(elementNameFullCaption))
+                    jElementInfo = getJsonElementValue(element,"type");
+                    // Add Content Field
+                    if (jElementInfo.equals(elementTypeContent))
+                        contentValue += getJsonElementValue(element,elementNameContent)
+                                + " ";
+                    else if (element.getAsJsonObject().has(elementNameFullCaption))
+                    // Add Full Caption Field
+                    {
+                        setFieldValue(fldFullCaption,element,elementNameFullCaption);
+                        captionAdded = true;
+                    } // End if (element.getAsJsonObject().has(elementNameFullCaption))
+                    // Add Kicker Field
+                    else if (element.getAsJsonObject().has(elementNameKicker))
+                    {
+                        setFieldValue(fldKicker,element,elementNameKicker);
+                        kickerAdded = true;
+                    }
 
+                } // End if (element.isJsonObject())
             }; // End For
-           /* if (!captionAdded)
+            if (!captionAdded)
             {
                 fldFullCaption.setStringValue("");
                 doc.add(fldFullCaption);
-            }*/
+            }
+            if (!kickerAdded)
+            {
+                fldKicker.setStringValue("");
+                doc.add(fldKicker);
+            }
             contentValue = Jsoup.parse(contentValue.trim()).text();
-           // fldContent.setStringValue(contentValue);
-           // doc.add(fldContent);
+            fldContent.setStringValue(contentValue);
+            doc.add(fldContent);
             all += contentValue;
             all = all.trim();
             fldAll.setStringValue(all);
@@ -262,16 +283,14 @@ public class WapoDocumentIndexer extends DocumentIndexer {
          */
             // Local Variables for a Single Line and Line Separator
             String line;
-           // int lineNum = 1;
             // Read The Input File into a Buffer
             try {
                 BufferedReader br = openDocumentFile(fileName);
                 // Iterate Through Lines and Parse Lines each by each
                 lineNum = 0;
                 while ((line = br.readLine()) != null)
-                //    if (lineNum++ == 1662)
+                  //  if (lineNum++ >= 386087 )
                         parseLine(line); // Send The Current Line To The Parse Line Function
-
             }  // End Try
             catch (Exception e) {
                 e.printStackTrace();

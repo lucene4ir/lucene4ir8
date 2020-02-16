@@ -7,8 +7,8 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 import java.io.*;
-
-
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 
 public class Main {
@@ -71,12 +71,9 @@ public class Main {
         String biTokenFilterFile = "params/index/TokenFilterFile_Bigram.xml",
                 uniTokenFilterFile = "params/index/TokenFilterFile_Unigram.xml" ,
                 combinedTokenFilterFile = "params/index/TokenFilterFile_Combinedgram.xml";
-        Main mn = new Main();
-        try {
-            mn.analyzeThis("Where is My Home",combinedTokenFilterFile);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+       // Main mn = new Main();
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy-HH:mm:ss");
+        System.out.println(LocalDateTime.now().format(dtf));
 
     }
 }

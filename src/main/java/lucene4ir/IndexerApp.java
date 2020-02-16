@@ -224,7 +224,6 @@ public class IndexerApp {
 
 }
 
-
 class IndexParams {
     public String indexName,
                   fileList,

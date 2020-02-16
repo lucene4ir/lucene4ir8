@@ -16,13 +16,22 @@ import lucene4ir.ExampleStatsApp;
 import lucene4ir.Lucene4IRConstants;
 import lucene4ir.utils.TokenAnalyzerMaker;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.CharArraySet;
+import org.apache.lucene.analysis.StopFilter;
 import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.en.EnglishAnalyzer;
+import org.apache.lucene.analysis.miscellaneous.ConditionalTokenFilter;
+import org.apache.lucene.analysis.shingle.ShingleFilter;
+import org.apache.lucene.analysis.shingle.ShingleFilterFactory;
+import org.apache.lucene.analysis.standard.StandardTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.index.*;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Terms;
+import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Paths;
@@ -219,6 +228,7 @@ public class StatisticsIndex {
         else
         {
             start = docid;
+           // ShingleFilter
             end = docid + 1;
         }
 
@@ -272,30 +282,34 @@ public class StatisticsIndex {
         printLine(line);
        if (docid < 0 )
        {
-           start = 0;
-           end = reader.maxDoc();
+           ExampleStatsApp ex = new ExampleStatsApp();
+           ex.reader = reader;
+           ex.termsList(fldName);
        }
         else
        {
            start = docid;
            end = start + 1;
+           //end = reader.maxDoc();
+           for (int i = start ; i < end ; i++)
+           {
+               trs = reader.getTermVector(i,fldName);
+             /*  line = reader.document(i).get(fldName);
+               checkAnalyzer(line,"Unigram");
+               checkAnalyzer(line,"Bigram");
+               checkAnalyzer(line,"Combined");
+*/
+               currentTermsCount = trs.size();
+               line = " " + i + "          " + currentTermsCount;
+               printLine(line);
+               totalTerms += currentTermsCount;
+           } // End For
+           line = "Total Terms : " + totalTerms + "\n" +
+                   "Average Document Length : " + totalTerms * 1.0 /reader.maxDoc() ;
+           printLine(line);
        }
-        for (int i = start ; i < end ; i++)
-        {
-           trs = reader.getTermVector(i,fldName);
-           line = reader.document(i).get(fldName);
-           checkAnalyzer(line,"Unigram");
-            checkAnalyzer(line,"Bigram");
-            checkAnalyzer(line,"Combined");
 
-           currentTermsCount = trs.size();
-            line = " " + i + "          " + currentTermsCount;
-            printLine(line);
-            totalTerms += currentTermsCount;
-        } // End For
-        line = "Total Terms : " + totalTerms + "\n" +
-                "Average Document Length : " + totalTerms * 1.0 /reader.maxDoc() ;
-        printLine(line);
+
     }  // End Function
 
     private void printLeavesCount ()
@@ -303,6 +317,7 @@ public class StatisticsIndex {
         String line ;
         ExampleStatsApp ex = new ExampleStatsApp();
         openReader();
+
         line =    "Index : " + indexName
                 + "\nLeaves Count : " + reader.leaves().size();
         printLine(line);
@@ -311,12 +326,14 @@ public class StatisticsIndex {
 
 private void  checkAnalyzer (String all , String indexType) throws Exception
 {
-    String  biTokenFilterFile = "params/index/TokenFilterFile_Bigram.xml",
+    String  biTokenFilterFile = "params/index/TokenFilterFile_BigramReplacePattern.xml",
+            // TokenFilterFile_BigramReplacePattern TokenFilterFile_Bigram
             uniTokenFilterFile = "params/index/TokenFilterFile_Unigram.xml" ,
             combinedTokenFilterFile = "params/index/TokenFilterFile_Combinedgram.xml",
             inputFilter = "";
     TokenAnalyzerMaker tam = new TokenAnalyzerMaker();
     Analyzer an;
+
     TokenStream ts;
     CharTermAttribute term;
     int termsCount = 0;
@@ -337,7 +354,9 @@ private void  checkAnalyzer (String all , String indexType) throws Exception
             break;
     } // End Switch
     an = tam.createAnalyzer(inputFilter);
+
     ts =  an.tokenStream(fldName,all);
+
     ts.reset();
 
     while (ts.incrementToken())
@@ -345,6 +364,9 @@ private void  checkAnalyzer (String all , String indexType) throws Exception
         term = ts.getAttribute(CharTermAttribute.class);
         printLine(term.toString());
         termsCount++;
+
+
+
     }
 
     printLine(indexType + " Index has " + termsCount +
@@ -368,6 +390,68 @@ private void  checkAnalyzer (String all , String indexType) throws Exception
             close();
         }
     }
+
+    private void countFiller(int docid) throws Exception
+    {
+        String line ;
+        Terms trs;
+        TermsEnum it;
+        long totalTerms = 0 ;
+        int start , end , ctr = 0;
+
+
+       // openWriter("TermCount");
+        openReader();
+
+        line = String.format("Index Name : %s\nFieldName : %s",indexName , fldName);
+        printLine(line);
+        if (docid < 0 )
+        {
+            start = 0;
+            end = reader.maxDoc();
+        }
+        else
+        {
+            start = docid;
+            end = start + 1;
+        }
+
+        for (int i = start ; i < end ; i++)
+        {
+            trs = reader.getTermVector(i,fldName);
+            totalTerms += trs.size();
+            it = trs.iterator();
+            while(it.next() != null)
+            {
+                line = it.term().utf8ToString();
+                if (line.contains("___"))
+                {
+                    printLine(line);
+                    ctr++;
+                }
+            }
+
+        } // End For
+        line =  "Filtered Terms %d of %s \nAverage  = %2.2f";
+        line = String.format(line,ctr,totalTerms,(ctr * 100.0) /totalTerms);
+        printLine(line);
+    }
+
+    public static String removeStopWords(String textFile) throws Exception {
+        CharArraySet stopWords = EnglishAnalyzer.getDefaultStopSet();
+        TokenStream tokenStream = new StandardTokenizer();
+        tokenStream.addAttribute (CharTermAttribute.class);
+        tokenStream = new StopFilter( tokenStream, stopWords);
+        StringBuilder sb = new StringBuilder();
+        CharTermAttribute charTermAttribute = tokenStream.addAttribute(CharTermAttribute.class);
+        tokenStream.reset();
+        while (tokenStream.incrementToken()) {
+            String term = charTermAttribute.toString();
+            sb.append(term + " ");
+        }
+        return sb.toString();
+    }
+
     public static void main(String[] args) {
         /*
       Small :  smallFieldedIndex smallCombinedIndex smallBigramIndex smallUnigramIndex testIndex biraw
@@ -380,24 +464,28 @@ private void  checkAnalyzer (String all , String indexType) throws Exception
       /*  AquaintUnigramIndex AquaintBigramIndex AquaintCombinedIndex AquaintFieldedIndex
         Core17UnigramIndex Core17BigramIndex Core17CombinedIndex Core17FieldedIndex */
 
-        sts.indexesFolder = "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\BiasMeasurementExperiments\\Indexes\\";
-        //sts.indexesFolder = "";
-        sts.indexName =  "AquaintCombinedIndex";
+       // sts.indexesFolder = "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\BiasMeasurementExperiments\\Indexes\\";
+      //  sts.indexesFolder = "I:\\Science\\CIS\\abdulaziz\\Indexes\\Lucene4IR\\";
+        sts.indexesFolder = "";
+        sts.indexName =  "AquaintUnigramIndex";
         sts.fldName = Lucene4IRConstants.FIELD_RAW;
         sts.outDir = "C:\\Users\\kkb19103\\Desktop\\CheckTerms\\";
+
         sts.screenOutput = true;
         sts.maxdoc = 0;
         try {
-            String all = "<span class=\\\"dateline\\\">NEW ORLEANS —</span> Whenever a <a href=\\\"http://www.washingtonpost.com/blogs/hokies-journal\\\" title=\\\"www.washingtonpost.com\\\">Virginia Tech</a> offensive coach is asked how the most prolific receiving duo in school history came to be, inevitably the first road game in 2008 against North Carolina comes up.";
-            sts.checkAnalyzer(all,"Unigram");
-            sts.checkAnalyzer(all,"Bigram");
-            sts.checkAnalyzer(all,"Combined");
 
+          // String all = "me is is now the floor never expected";
+          // sts.checkAnalyzer(all,"Unigram");
+          //  sts.checkAnalyzer(all,"Bigram");
+          //  removeStopWords(all);
+           // sts.checkAnalyzer(all,"Combined");
+          //  sts.countFiller(-1);
           //  sts.printDocLength(0);
 
            // sts.printTermList(1,false);
-          // sts.printTermCount(0);
-           // sts.printDocCount();
+           sts.printTermCount(-1);
+         //   sts.printDocCount();
            // sts.printDocLength(Lucene4IRConstants.FIELD_RAW);
           //  sts.printLeavesCount();
          //  sts.printTermLeavesCount();

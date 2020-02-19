@@ -6,17 +6,12 @@ import lucene4ir.parse.CSVParser;
 
 import lucene4ir.utils.CrossDirectoryClass;
 import lucene4ir.utils.XMLTextParser;
-import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.store.FSDirectory;
 
 import javax.xml.bind.JAXB;
 import java.io.*;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class RunExperimentSet {
     private ExperimentSetParams p;
@@ -46,22 +41,25 @@ public class RunExperimentSet {
 
     private String getBashLine(String b)
     {
-        String qrelFile , trecEvalLine , corpus;
-        corpus = getCorpus(p.indexName);
-        switch (corpus)
-        {
-            case "Core17":
-                qrelFile = "307-690.qrels";
-                break;
-            case "WAPO":
-                qrelFile = "qrels.core18.txt";
-                break;
-            default:
-                qrelFile = "trec2005.aquaint.qrels";
-        } // End switch
+        String qrelFile , trecEvalLine = "", corpus;
 
-        trecEvalLine  = String.format("~/trecEval/trec_eval ~/trecEval/Qrels/%s ./result%s.res > ./trec%s.trec\n" ,
-                qrelFile,b,b);
+        if (!validRetrievability())
+        {
+            corpus = getCorpus(p.indexName);
+            switch (corpus)
+            {
+                case "Core17":
+                    qrelFile = "307-690.qrels";
+                    break;
+                case "WAPO":
+                    qrelFile = "qrels.core18.txt";
+                    break;
+                default:
+                    qrelFile = "trec2005.aquaint.qrels";
+            } // End switch
+            trecEvalLine  = String.format("~/trecEval/trec_eval ~/trecEval/Qrels/%s ./result%s.res > ./trec%s.trec\n" ,
+                    qrelFile,b,b);
+        } // End if (!validRetrievability())
         return trecEvalLine;
     } // End Function
 
@@ -153,13 +151,13 @@ public class RunExperimentSet {
         parser.save();
     } // End Function
 
-    private String getRetTypeFolder(String retType)
+    private String getRetTypeFolder(String b)
     {
         String result = "";
-        if (retType == "Gravity")
-            result =   "\\GravityWeightB0.5C" + p.maxResults;
-        else
+        if (b.equals("0"))
             result =   "\\Cumulative";
+        else
+            result =   "\\GravityWeightB0.5C" + p.maxResults;
         return result;
     }
 
@@ -172,10 +170,10 @@ public class RunExperimentSet {
         sts.calculateStatistics(outFileName,"",maxResultsInt);
         return String.format("%d,%d,%d", sts.lineCtr , sts.docCtr , sts.limitedQryCtr);
     }
-    private String runRCStatistics (String b , String retType)
+    private String runRCStatistics (String coefficient , String b)
     {
         StatisticsRetrievabilityCalculator sts = new StatisticsRetrievabilityCalculator();
-        String outFileName = p.outputDir + getRetTypeFolder(retType) +  "/RCResults" + b + ".ret";
+        String outFileName = p.outputDir + getRetTypeFolder(b) +  "/RCResults" + coefficient + ".ret";
         sts.calculateStatistics(outFileName);
         return String.format("%1.6f,%d,%1.4f",sts.G , sts.zeroDocCtr , sts.sum );
     }
@@ -208,22 +206,23 @@ public class RunExperimentSet {
         return runRetrievalStatistics(b);
     } // End Function
 
-    private String runRCExperiment (String b , String retType)
+    private String runRCExperiment (String coefficient , String b)
     {
         // Run Retrievability Calculator Experiments for given B Value
         String outFileName ;
         XMLTextParser parser = new XMLTextParser(p.retrievabilityParamsFile);
-        outFileName = p.outputDir + "\\result" + b + ".res";
+        outFileName = p.outputDir + "\\result" + coefficient + ".res";
         parser.setTagValue("resFile",outFileName);
-        outFileName = p.outputDir + getRetTypeFolder(retType) +  "\\RCResults" + b + ".ret";
+        outFileName = p.outputDir + getRetTypeFolder(b) +  "\\RCResults" + coefficient + ".ret";
         parser.setTagValue("retFile",outFileName);
         parser.setTagValue("indexName",p.indexName);
         parser.setTagValue("c",p.maxResults);
-        parser.setTagValue("retType",retType);
+        parser.setTagValue("b",b);
         parser.save();
         RetrievabilityCalculatorApp rcApp = new RetrievabilityCalculatorApp(p.retrievabilityParamsFile);
         rcApp.calculate();
-        return runRCStatistics(b,retType);
+        return String.format("%1.6f,%d,%1.4f",rcApp.G , rcApp.zeroRCtr, rcApp.rSum);
+        // return runRCStatistics(coefficient,b);
     } // End Function
     private String getPerformanceValues(String b) throws Exception
     {
@@ -255,18 +254,23 @@ public class RunExperimentSet {
     {
         return p.maxResults.equals("100");
     }
-    private void runALLRC (String b)
+    private void runALLRC (String coefficient)
     {
-        String result ;
+        String result , b;
         // Calculation
-        result = runRCExperiment(b,"Cumulative");
-        // *** Statistics ***
-        csvPaser.setRet(result);
-        csvPaser.addCSVLineToMap();
+        if (validRetrievability())
+        {
+            b = "0";
+            result = runRCExperiment(coefficient,b);
+            // *** Statistics ***
+            csvPaser.setRet(result);
+            csvPaser.addCSVLineToMap();
 
-        result = runRCExperiment(b,"Gravity");
-        csvPaser.setKey(getNewKey("0.5",b));
-        csvPaser.setRet(result);
+            b = "0.5";
+            result = runRCExperiment(coefficient,b);
+            csvPaser.setKey(getNewKey(b,coefficient));
+            csvPaser.setRet(result);
+        } // End if (validRetrievability())
 }
 
 private String getCurrentTime() {
@@ -310,10 +314,9 @@ private String getCurrentTime() {
             {
                 case "All":
                     csvPaser.setRes(runRetrievalExperiment(b));
-                    if (validRetrievability())
-                        runALLRC(b);
-                    else
-                        bashLines += getBashLine(b);
+                    // Checking ValidRetrievability Inside These Functions
+                    runALLRC(b);
+                    bashLines += getBashLine(b);
                     break;
                 case "AllRC":
                     runALLRC(b);
@@ -321,7 +324,7 @@ private String getCurrentTime() {
                 case "Cumulative":
                 case "Gravity":
                     if (validRetrievability())
-                        csvPaser.setRet(runRCExperiment(b,p.exType));
+                        csvPaser.setRet(runRCExperiment(b,retB));
                     break;
 
                 case "Retrieval":
@@ -376,7 +379,6 @@ private String getCurrentTime() {
 
     private void runCalculatedList ()
     {
-        int t = 0;
         String paramFileName =  "params/BMExperimentSets/Experiment2.xml";
        String[] indexNames = {
               /* "AquaintBigramIndex","AquaintCombinedIndex","AquaintUnigramIndex" , "AquaintFieldedIndex",
@@ -384,27 +386,20 @@ private String getCurrentTime() {
               // "WAPOUnigramIndex","WAPOBigramIndex","WAPOCombinedIndex"  , "WAPOFieldedIndex"
                "WAPOUnigramIndex","WAPOBigramIndex","WAPOCombinedIndex"  , "WAPOFieldedIndex"
        };
-       String maxResults[] = {"100","1000"};
+       String maxResults[] = {"100"};
        //String models[] = {"LMD","PL2"};
-        String models[] = {"PL2","LMD"};
-
+        String models[] = {"BM25","PL2","LMD"};
        for (int m = 0 ; m < models.length ; m++)
        {
-           if (m == 0)
-               t=2;
-           else
-               t=0;
-           for ( ; t < indexNames.length ; t++)
+           for ( int i = 0 ; i < indexNames.length ; i++)
            {
                for (int j=0 ; j < maxResults.length ; j++ )
                {
-                   fillExperimentParameterFile(paramFileName , models[m] , indexNames[t] , maxResults[j]);
+                   fillExperimentParameterFile(paramFileName , models[m] , indexNames[i] , maxResults[j]);
                    runExperimentFile(paramFileName);
                } // End For J
            } // End For I
        }
-
-
        // runExperimentFile(paramFileName);
     }
 

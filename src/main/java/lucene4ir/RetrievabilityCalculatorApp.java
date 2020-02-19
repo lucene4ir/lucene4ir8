@@ -36,6 +36,8 @@ public class RetrievabilityCalculatorApp {
     public String retrievabilityParamFile;
     public HashMap<String, Double> docMap;
     public HashMap<Integer, Double> qryMap;
+    public double G , rSum;
+    public int zeroRCtr;
 
     // Constructor Method
     public RetrievabilityCalculatorApp(String inputParameters) {
@@ -99,7 +101,7 @@ public class RetrievabilityCalculatorApp {
 
     */
 
-    private double calculateG(ArrayList<Double> rValues)
+    private void calculateG(ArrayList<Double> rValues)
     {
         /*
         Given array of R values >>> Calculate G Coefficient by :
@@ -111,23 +113,27 @@ public class RetrievabilityCalculatorApp {
             r = Retrievability , N = NUmber Of Documents
         */
         int N;
-        double r , numerator = 0 , denominator = 0 , result = 0;
+        double r , numerator = 0 , result = 0;
 
         N = rValues.size() + 1;
         // Sort input R Values Ascendingly
         Collections.sort(rValues);
+        this.zeroRCtr = 0;
         for (int i = 1 ; i <= rValues.size() ; i++)
         {
             r = rValues.get(i-1);
             numerator += (2 * i - N) * r;
-            denominator += r;
+           // denominator += r;
+            if (r == 0)
+                zeroRCtr++;
         }
-        result = numerator / (--N * denominator);
-        return result;
+        result = numerator / (--N * this.rSum);
+        //this.rSum = denominator;
+        this.G = result;
     } // End Function
 
 
-    private double displayResultsAndCalculateG() throws Exception
+    private void displayResultsAndCalculateG() throws Exception
     {
         /*
         Display The Results as Needed For the whole Document Vector
@@ -137,7 +143,7 @@ public class RetrievabilityCalculatorApp {
         String line , docID;
         Map.Entry item;
         Iterator it = docMap.entrySet().iterator();
-        double r , G;
+        double r ;
         ArrayList<Double> rValues = new ArrayList<Double>();
 
         PrintWriter pr = new PrintWriter(p.retFile);
@@ -153,11 +159,10 @@ public class RetrievabilityCalculatorApp {
             System.out.print(line);
         } // End While
 
-        G = calculateG(rValues);
-        line = "The G Coefficient = " + G;
+        calculateG(rValues);
+        line = "The G Coefficient = " + this.G;
         System.out.println(line);
         pr.close();
-        return G;
     } // End Function
 
 
@@ -170,6 +175,10 @@ public class RetrievabilityCalculatorApp {
         return result;
     } // End Function
 
+    private boolean isCumulative()
+    {
+        return p.b == 0;
+    }
 
     private double calculateR (int qryID , int rank)
     {
@@ -184,7 +193,7 @@ public class RetrievabilityCalculatorApp {
             // If Zero Rank r = 0
             result = 0;
         // If No Cost Don't Calculate it
-        else if (rank == 1 || p.b == 0)
+        else if (rank == 1 || isCumulative())
             result = weight;
         else
             result = weight * costFunction(rank);
@@ -199,19 +208,19 @@ public class RetrievabilityCalculatorApp {
         String line, parts[] , docid;
         int  qryid , rank ;
         double r = 1; // Default for document counter method (counting documents in .res file)
-
+        rSum = 0;
         BufferedReader br = new BufferedReader(new FileReader(p.resFile));
         while ((line = br.readLine()) != null) {
             parts = line.split(" ", 5);
             docid = parts[2].trim();
 
             // Document Counter Lines
-            if (p.b != 0) {
+            if (!isCumulative()) {
                 qryid = Integer.parseInt(parts[0]);
                 rank = Integer.parseInt(parts[3]);
                 r = calculateR(qryid, rank);
             } // End if
-
+            rSum += r;
             // End Document Counter Lines
             if (docMap.containsKey(docid))
                 docMap.put(docid, docMap.get(docid) + r);
@@ -219,6 +228,7 @@ public class RetrievabilityCalculatorApp {
                 System.out.println(docid);
 
         } // End While
+
         br.close();
     } // End Function
 
@@ -269,22 +279,20 @@ public class RetrievabilityCalculatorApp {
         reader.close();
     } // End Function
 
-    public double calculate() {
-        double G = 0;
+    public void calculate() {
         // Mystro Method that coordinate the process
         try {
             readParamsFromFile();
             initDocumentMap();
             initQueryMap();
             readRetrievalResultsAndCalculateR();
-            G = displayResultsAndCalculateG();
+            displayResultsAndCalculateG();
             close();
         } catch (Exception e) {
             System.out.println(" caught a " + e.getClass() +
                     "\n with message: " + e.getMessage());
             System.exit(1);
         }
-        return G;
     } // End Function
 
     public static void main(String args[]) {
@@ -292,8 +300,8 @@ public class RetrievabilityCalculatorApp {
         String inputParamFile;
 
         inputParamFile = args[0];
-        RetrievabilityCalculatorApp rc = new RetrievabilityCalculatorApp(inputParamFile);
-        rc.calculate();
+       // RetrievabilityCalculatorApp rc = new RetrievabilityCalculatorApp(inputParamFile);
+        //rc.calculate();
     } // End Function
 
 

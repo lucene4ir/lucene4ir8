@@ -12,6 +12,7 @@ import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class RunExperimentSet {
     private ExperimentSetParams p;
@@ -23,7 +24,7 @@ public class RunExperimentSet {
             tokenFilterFile = combinedFilter,*/
             defaultCSVKey;
     private CSVParser csvPaser;
-
+    private  HashMap<String, Double> initMap;
     private String getCorpus (String indexName)
     {
         String result = "";
@@ -155,9 +156,9 @@ public class RunExperimentSet {
     {
         String result = "";
         if (b.equals("0"))
-            result =   "\\Cumulative";
+            result =   "/Cumulative";
         else
-            result =   "\\GravityWeightB0.5C" + p.maxResults;
+            result =   "/GravityWeightB0.5C" + p.maxResults;
         return result;
     }
 
@@ -181,17 +182,24 @@ public class RunExperimentSet {
     private String runRetrievalExperiment(String b)
     {
         // Run RetrievalApp Experiment for given B Value
-        String outFileName;
+        String outFileName , param;
         FieldedRetrievalApp fRetApp;
         RetrievalApp retApp;
 
         XMLTextParser parser = new XMLTextParser(p.retrievalParamsFile);
         outFileName = p.outputDir + "/result" + b + ".res";
-        parser.setTagValue("c", b );
+        if (p.model.equals("BM25"))
+            param = "b";
+        else if (p.model.equals("PL2"))
+            param = "c";
+        else
+            param = "mu";
+        parser.setTagValue(param, b );
         parser.setTagValue("resultFile",outFileName);
         parser.setTagValue("queryFile",p.queryFile);
         parser.setTagValue("indexName",p.indexName);
         parser.setTagValue("maxResults",p.maxResults);
+        parser.setTagValue("model",p.model);
         parser.save();
         if (p.indexName.contains("Fielded"))
         {
@@ -211,15 +219,16 @@ public class RunExperimentSet {
         // Run Retrievability Calculator Experiments for given B Value
         String outFileName ;
         XMLTextParser parser = new XMLTextParser(p.retrievabilityParamsFile);
-        outFileName = p.outputDir + "\\result" + coefficient + ".res";
+        outFileName = p.outputDir + "/result" + coefficient + ".res";
         parser.setTagValue("resFile",outFileName);
-        outFileName = p.outputDir + getRetTypeFolder(b) +  "\\RCResults" + coefficient + ".ret";
+        outFileName = p.outputDir + getRetTypeFolder(b) +  "/RCResults" + coefficient + ".ret";
         parser.setTagValue("retFile",outFileName);
         parser.setTagValue("indexName",p.indexName);
         parser.setTagValue("c",p.maxResults);
         parser.setTagValue("b",b);
         parser.save();
         RetrievabilityCalculatorApp rcApp = new RetrievabilityCalculatorApp(p.retrievabilityParamsFile);
+        rcApp.docMap = (HashMap<String, Double>) initMap.clone();
         rcApp.calculate();
         return String.format("%1.6f,%d,%1.4f",rcApp.G , rcApp.zeroRCtr, rcApp.rSum);
         // return runRCStatistics(coefficient,b);
@@ -284,8 +293,8 @@ private String getCurrentTime() {
         Get Coefficient Values based on input model
          */
         String[]
-                 BM25Set = {"0.1", "0.2","0.3","0.4","0.5","0.6","0.7","0.8","0.9","1.0"},
-                 PL2Set = {"0.1", "0.5", "1.0", "5.0", "10", "15", "20", "50"},
+                 BM25Set = {"0.1", "0.2","0.3","0.4","0.5","0.6","0.7","0.8","0.9","1"},
+                 PL2Set = {"0.1", "0.5", "1", "5", "10", "15", "20", "50"},
                  //PL2Set = {"0.1", "0.5"},
                  LMDSet = {"100","200","300","400","500","600","700","800","900","1000","5000"},
                  result;
@@ -301,9 +310,7 @@ private String getCurrentTime() {
     {
         // This function is used to process the whole experiment Set
          String b , retB  = "0", bashLines = ""  ;
-
          String bRange[] = getbRange();
-
          for (int i = 0; i < bRange.length; i++) {
              b = bRange[i];
          if (p.exType.equals("Gravity"))
@@ -386,29 +393,36 @@ private String getCurrentTime() {
               // "WAPOUnigramIndex","WAPOBigramIndex","WAPOCombinedIndex"  , "WAPOFieldedIndex"
                "WAPOUnigramIndex","WAPOBigramIndex","WAPOCombinedIndex"  , "WAPOFieldedIndex"
        };
-       String maxResults[] = {"100"};
-       //String models[] = {"LMD","PL2"};
+       String maxResults[] = {"100","1000"};
         String models[] = {"BM25","PL2","LMD"};
        for (int m = 0 ; m < models.length ; m++)
-       {
            for ( int i = 0 ; i < indexNames.length ; i++)
-           {
                for (int j=0 ; j < maxResults.length ; j++ )
                {
                    fillExperimentParameterFile(paramFileName , models[m] , indexNames[i] , maxResults[j]);
                    runExperimentFile(paramFileName);
                } // End For J
-           } // End For I
-       }
        // runExperimentFile(paramFileName);
     }
 
+    private void cloneMap()
+    {
+        RetrievabilityCalculatorApp retApp = new RetrievabilityCalculatorApp("");
+        try {
+            retApp.initDocumentMap("C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\BiasMeasurementExperiments\\Indexes\\WAPOUnigramIndex");
+            initMap = (HashMap<String, Double>) retApp.docMap.clone();
+            retApp = null;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     public static void main(String[] args)
         {
         // write your code here
             String sourceFile = "params\\BMExperimentSets\\Experiment2.xml",
                     result;
         RunExperimentSet re = new RunExperimentSet();
+        re.cloneMap();
         re.runCalculatedList();
         // re.runExperimentFile(sourceFile);
 

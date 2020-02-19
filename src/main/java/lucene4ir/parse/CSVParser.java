@@ -78,7 +78,7 @@ public class CSVParser {
     }
 
     public String addCSVLineToMap() {
-        String value = "" , newKey , result = "";
+        String value = "" , newKey;
         int  retCount = 3 , resCount = 3 , performanceCount = 3 ;
         int start;
 

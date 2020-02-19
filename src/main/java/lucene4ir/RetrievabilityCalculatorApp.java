@@ -34,7 +34,7 @@ public class RetrievabilityCalculatorApp {
 
     // public properties
     public String retrievabilityParamFile;
-    public HashMap<String, Double> docMap;
+    public HashMap<String, Double> docMap ;
     public HashMap<Integer, Double> qryMap;
     public double G , rSum;
     public int zeroRCtr;
@@ -44,6 +44,7 @@ public class RetrievabilityCalculatorApp {
         retrievabilityParamFile = inputParameters;
         docMap = new HashMap<String, Double>();
         qryMap = new HashMap<Integer, Double>();
+
     }
 
     private void displayMsgThenExit(String msg)
@@ -261,14 +262,16 @@ public class RetrievabilityCalculatorApp {
         qryMap = null;
     } // End Function
 
-    private void initDocumentMap() throws Exception {
+    public void initDocumentMap(String indexName) throws Exception {
 
         // Initialize Document Hash MAP (docid , r = 0)
+        // Local Variables
         IndexReader reader;
         long docCount;
         String docid;
         final String docIDField = Lucene4IRConstants.FIELD_DOCNUM;
-        reader = DirectoryReader.open(FSDirectory.open(Paths.get(p.indexName)));
+
+        reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexName)));
         docCount = reader.maxDoc();
 
         for (int i = 0; i < docCount; i++)
@@ -283,7 +286,7 @@ public class RetrievabilityCalculatorApp {
         // Mystro Method that coordinate the process
         try {
             readParamsFromFile();
-            initDocumentMap();
+         //   initDocumentMap(p.indexName);
             initQueryMap();
             readRetrievalResultsAndCalculateR();
             displayResultsAndCalculateG();

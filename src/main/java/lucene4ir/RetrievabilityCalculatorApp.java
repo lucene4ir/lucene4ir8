@@ -17,11 +17,8 @@ import org.apache.lucene.store.FSDirectory;
 
 import javax.xml.bind.JAXB;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.PrintWriter;
-import java.nio.file.Paths;
+ import java.io.*;
+ import java.nio.file.Paths;
 import java.util.*;
 
 public class RetrievabilityCalculatorApp {
@@ -262,7 +259,7 @@ public class RetrievabilityCalculatorApp {
         qryMap = null;
     } // End Function
 
-    public void initDocumentMap(String indexName) throws Exception {
+    public void initDocumentMap(String indexName) {
 
         // Initialize Document Hash MAP (docid , r = 0)
         // Local Variables
@@ -271,22 +268,28 @@ public class RetrievabilityCalculatorApp {
         String docid;
         final String docIDField = Lucene4IRConstants.FIELD_DOCNUM;
 
-        reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexName)));
+        docMap = new HashMap<String, Double>();
+        try {
+            reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexName)));
         docCount = reader.maxDoc();
 
-        for (int i = 0; i < docCount; i++)
-        {
+        for (int i = 0; i < docCount; i++) {
             docid = reader.document(i).get(docIDField);
-            docMap.put(docid,0.0);
-        }
+            docMap.put(docid, 0.0);
+        } // End For
         reader.close();
+        } // End Try
+        catch (IOException e) {
+            e.printStackTrace();
+        } // End Catch
     } // End Function
 
     public void calculate() {
         // Mystro Method that coordinate the process
         try {
             readParamsFromFile();
-         //   initDocumentMap(p.indexName);
+            if (docMap.size() < 1)
+                initDocumentMap(p.indexName);
             initQueryMap();
             readRetrievalResultsAndCalculateR();
             displayResultsAndCalculateG();
@@ -298,6 +301,16 @@ public class RetrievabilityCalculatorApp {
         }
     } // End Function
 
+    public HashMap<String, Double> cloneMap (String indexName)
+    {
+        this.initDocumentMap(indexName);
+        return (HashMap<String, Double>) docMap.clone();
+    }
+
+    public void setMap (HashMap<String, Double> inMap)
+    {
+       docMap = (HashMap<String, Double>) inMap.clone();
+    }
     public static void main(String args[]) {
         // RunExperimentsRetrievabilityCalculatorApp (Mystro Function) - Coordinate the process
         String inputParamFile;

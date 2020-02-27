@@ -132,7 +132,7 @@ public class CSVParser {
                 key = line.replace("," + value, "");
                 csvMap.put(key, value);
             } // End While
-
+            br.close();
         } catch (IOException e) {
             e.printStackTrace();
         } // End Catch

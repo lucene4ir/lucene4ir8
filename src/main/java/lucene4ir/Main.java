@@ -1,5 +1,6 @@
 package lucene4ir;
 
+import lucene4ir.Stats.StatisticsRetrieval;
 import lucene4ir.utils.TokenAnalyzerMaker;
 import lucene4ir.utils.XMLTextParser;
 import org.apache.lucene.analysis.Analyzer;
@@ -67,13 +68,8 @@ public class Main {
 
     }
     public static void main(String[] args)  {
-	// write your code here
-        String biTokenFilterFile = "params/index/TokenFilterFile_Bigram.xml",
-                uniTokenFilterFile = "params/index/TokenFilterFile_Unigram.xml" ,
-                combinedTokenFilterFile = "params/index/TokenFilterFile_Combinedgram.xml";
-       // Main mn = new Main();
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy-HH:mm:ss");
-        System.out.println(LocalDateTime.now().format(dtf));
+	RunExperimentSet re = new RunExperimentSet();
+    re.runCalculatedList();
 
     }
 }

@@ -53,7 +53,7 @@ public class StatisticsRetrieval
         docMap = new HashMap<String, Integer>();
         qryMap = new HashMap<Integer, Integer>();
     }
-    private void displayResults (String outDir,int c) throws Exception
+    private void displayResults (int maxResults) throws Exception
     {
         // Display Statistics Results
 
@@ -61,23 +61,23 @@ public class StatisticsRetrieval
         System.out.println("\nRetrieval File Statistics");
         System.out.println("-----------------------------");
         System.out.println("Retrieval File : '" + inFile + "'");
-        System.out.println("Max Results (c) : " + c);
+        System.out.println("Max Results (maxResults) : " + maxResults);
         System.out.println("Total Number of Retrieved Documents : " + docMap.size());
         System.out.println("Total Queries = " + totalQryCtr);
-        System.out.println("Number Of Limited Queries < c : " + limitedQryCtr);
+        System.out.println("Number Of Limited Queries < maxResults : " + limitedQryCtr);
         System.out.println("Expected Number Of Lines : " + expectedResults);
         System.out.println("Current Number Of Lines : " + lineCtr);
         System.out.println("Number of Missing Lines  = " + (expectedResults - lineCtr));
         System.out.println(String.format("Missing Lines Percentage = %%%2.2f",
                 (expectedResults - lineCtr) * 100.0 /  expectedResults));
         System.out.println("-----------------------------");
-        System.out.println("Document Map (DocID , Frequency )\n" +
+       /* System.out.println("Document Map (DocID , Frequency )\n" +
                             "Query Map (QryID , Frequency) are in the directory '" + outDir + "'");
 
-        /*
+
         Display Results of Document Map and Query Map
         Output Query Map
-         */
+
         String outFileName = outDir + "/retQryMap.sts" , line;
         Iterator it = qryMap.entrySet().iterator();
         Map.Entry item;
@@ -101,6 +101,8 @@ public class StatisticsRetrieval
             pr.write(line);
         } // End while
         pr.close();
+        */
+
     } // End Function
 
     private void close(){
@@ -109,7 +111,7 @@ public class StatisticsRetrieval
         docMap = null;
     } // End Function
 
-    public void calculateStatistics(String inputFile , String outDir , int c)
+    public void calculateStatistics(String inputFile , int maxResults)
     {
         String line , parts[];
         int qryID  , rank ,  qryCtr = 1 , oldQryID = 0;
@@ -141,13 +143,13 @@ public class StatisticsRetrieval
                 if (rank == 1)
                 // new Query
                 {
-                    if (qryCtr < c && lineCtr > 1)
+                    if (qryCtr < maxResults && lineCtr > 1)
                     {
                         qryMap.put(oldQryID,qryCtr);
                         limitedQryCtr++;
                     } // End If
-                    else if (qryCtr == c)
-                        qryMap.put(oldQryID,c);
+                    else if (qryCtr == maxResults)
+                        qryMap.put(oldQryID,maxResults);
                     qryCtr = 1;
                     totalQryCtr++;
                 } // End IF
@@ -158,9 +160,9 @@ public class StatisticsRetrieval
                     oldQryID = qryID;
                 } // End Else
             } // End While
-            expectedResults = c * totalQryCtr;
+            expectedResults = maxResults * totalQryCtr;
             docCtr = docMap.size();
-           // displayResults(outDir,c);
+          // displayResults(maxResults);
             close();
         } // End Try
         catch (Exception e) {
@@ -174,6 +176,6 @@ public class StatisticsRetrieval
 
         path = args[0];
         StatisticsRetrieval sts = new StatisticsRetrieval();
-        sts.calculateStatistics(path,"out" , 100);
+        // sts.calculateStatistics(path,"out" , 100);
     } // End Main Function
 } // End Class

@@ -22,7 +22,7 @@ public class RunExperimentSet {
             uniFilter = "params/index/p.tokenFilterFile_Unigram.xml" ,
             combinedFilter = "params/index/p.tokenFilterFile_Combinedgram.xml" ,
             tokenFilterFile = combinedFilter,*/
-            defaultCSVKey;
+            defaultCSVKey,filePrefix;
     private CSVParser csvPaser;
     private  HashMap<String, Double> initMap;
     private String getCorpus (String indexName)
@@ -64,25 +64,6 @@ public class RunExperimentSet {
         return trecEvalLine;
     } // End Function
 
-   /* private void initDocumentMap() throws Exception {
-
-        docMap = new HashMap<String, Double>();
-        // Initialize Document Hash MAP (docid , r = 0)
-        IndexReader reader;
-        long docCount;
-        String docid;
-        final String docIDField = Lucene4IRConstants.FIELD_DOCNUM;
-        reader = DirectoryReader.open(FSDirectory.open(Paths.get(p.indexName)));
-        docCount = reader.maxDoc();
-
-        for (int i = 0; i < docCount; i++)
-        {
-            docid = reader.document(i).get(docIDField);
-            docMap.put(docid,0.0);
-        }
-        reader.close();
-    } // End Function*/
-
     private void fillAutoParameters()
     {
         /*
@@ -95,8 +76,13 @@ public class RunExperimentSet {
          out\Core17\UnigramIndex\50\C1000\CombinedgramFilter
          */
         String qryCount = "" , indexFolder = "" , C = "", corpus , csvFile ,
-        outPutFolder = "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\BiasMeasurementExperiments";
+        outPutFolder = "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\BiasMeasurementExperiments\\WAPO 26-02-2020";
 
+        if (validRetrievability() &&
+                initMap == null &&
+                p.exType.contains("All")
+        )
+            cloneMap();
         C = "C" + p.maxResults;
         if (validRetrievability())
       //  if (p.maxResults.equals("100"))
@@ -105,7 +91,7 @@ public class RunExperimentSet {
             qryCount = "50";
 
         corpus = getCorpus(p.indexName);
-        p.queryFile = String.format("%s/%s/Queries/%s.qry" , outPutFolder, corpus , qryCount);
+        p.queryFile = String.format("%s/Queries/%s.qry" , outPutFolder, corpus , qryCount);
 
         if (p.indexName.contains("Combined"))
             indexFolder = "CombinedIndex";
@@ -118,9 +104,15 @@ public class RunExperimentSet {
 
         //   Sample Output
         //   out\Core17\UnigramIndex\50\C1000\CombinedgramFilter
-        p.outputDir = String.format("%s/%s/%s/%s/%s/%s" ,
-                outPutFolder , corpus , p.model , indexFolder , qryCount , C);
-        csvFile = outPutFolder + "/out.csv";
+        filePrefix = String.format("%s\\%s-%s-%s-%s-%s-" ,
+                outPutFolder , corpus.substring(0,2) ,
+                p.model , indexFolder.substring(0 ,1) + "I"
+                , qryCount , C);
+
+        if (p.csvFile.isEmpty())
+            csvFile = "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\BiasMeasurementExperiments\\out.csv";
+        else
+            csvFile = p.csvFile;
         csvPaser = new CSVParser();
         csvPaser.readFromFile(csvFile);
 
@@ -152,29 +144,30 @@ public class RunExperimentSet {
         parser.save();
     } // End Function
 
-    private String getRetTypeFolder(String b)
+    private String getResFile (String coefficient)
     {
-        String result = "";
-        if (b.equals("0"))
-            result =   "/Cumulative";
-        else
-            result =   "/GravityWeightB0.5C" + p.maxResults;
-        return result;
+       return filePrefix + "result" + coefficient + ".res";
+    }
+
+    private String getRetFile (String b , String coefficient)
+    {
+        // WA-BM25-BI-300K-C100-0.5-RCResults0.1.ret
+        return String.format("%s%s-RCResults%s.ret",filePrefix,b,coefficient);
     }
 
     private String runRetrievalStatistics (String b)
     {
         int maxResultsInt;
         StatisticsRetrieval sts = new StatisticsRetrieval();
-        String outFileName = p.outputDir + "\\result" + b + ".res";
+        String outFileName = getResFile(b);
         maxResultsInt = Integer.parseInt(p.maxResults);
-        sts.calculateStatistics(outFileName,"",maxResultsInt);
+        sts.calculateStatistics(outFileName,maxResultsInt);
         return String.format("%d,%d,%d", sts.lineCtr , sts.docCtr , sts.limitedQryCtr);
     }
     private String runRCStatistics (String coefficient , String b)
     {
         StatisticsRetrievabilityCalculator sts = new StatisticsRetrievabilityCalculator();
-        String outFileName = p.outputDir + getRetTypeFolder(b) +  "/RCResults" + coefficient + ".ret";
+        String outFileName = getRetFile(b,coefficient);
         sts.calculateStatistics(outFileName);
         return String.format("%1.6f,%d,%1.4f",sts.G , sts.zeroDocCtr , sts.sum );
     }
@@ -187,7 +180,7 @@ public class RunExperimentSet {
         RetrievalApp retApp;
 
         XMLTextParser parser = new XMLTextParser(p.retrievalParamsFile);
-        outFileName = p.outputDir + "/result" + b + ".res";
+        outFileName = filePrefix + "result" + b + ".res";
         if (p.model.equals("BM25"))
             param = "b";
         else if (p.model.equals("PL2"))
@@ -219,16 +212,16 @@ public class RunExperimentSet {
         // Run Retrievability Calculator Experiments for given B Value
         String outFileName ;
         XMLTextParser parser = new XMLTextParser(p.retrievabilityParamsFile);
-        outFileName = p.outputDir + "/result" + coefficient + ".res";
+        outFileName = getResFile(coefficient);
         parser.setTagValue("resFile",outFileName);
-        outFileName = p.outputDir + getRetTypeFolder(b) +  "/RCResults" + coefficient + ".ret";
+        outFileName = getRetFile(b,coefficient);
         parser.setTagValue("retFile",outFileName);
         parser.setTagValue("indexName",p.indexName);
         parser.setTagValue("c",p.maxResults);
         parser.setTagValue("b",b);
         parser.save();
         RetrievabilityCalculatorApp rcApp = new RetrievabilityCalculatorApp(p.retrievabilityParamsFile);
-        rcApp.docMap = (HashMap<String, Double>) initMap.clone();
+        rcApp.setMap(initMap);
         rcApp.calculate();
         return String.format("%1.6f,%d,%1.4f",rcApp.G , rcApp.zeroRCtr, rcApp.rSum);
         // return runRCStatistics(coefficient,b);
@@ -241,7 +234,7 @@ public class RunExperimentSet {
                 keys[] = {"map","bpref","P10"};
         BufferedReader br;
         int i = 0;
-        inFile = p.outputDir + "\\trec" + b + ".trec";
+        inFile = filePrefix + "trec" + b + ".trec";
         br = new BufferedReader(new FileReader(inFile));
 
         while ((line = br.readLine()) != null && i < keys.length )
@@ -250,8 +243,8 @@ public class RunExperimentSet {
                 result += "," + line.split("\t",3)[2];
                 i++;
             } // End if
-
-        return result.replaceFirst(",","");
+        result = result.replaceFirst(",","");
+        return result;
     } // End Function
 
     private String getNewKey (String retB , String b)
@@ -293,10 +286,14 @@ private String getCurrentTime() {
         Get Coefficient Values based on input model
          */
         String[]
-                 BM25Set = {"0.1", "0.2","0.3","0.4","0.5","0.6","0.7","0.8","0.9","1"},
-                 PL2Set = {"0.1", "0.5", "1", "5", "10", "15", "20", "50"},
-                 //PL2Set = {"0.1", "0.5"},
+                // BM25Set = {"0.1", "0.2","0.3","0.4","0.5","0.6","0.7","0.8","0.9","1"},
+               //  PL2Set = {"0.1", "0.5", "1", "5", "10", "15", "20", "50"},
                  LMDSet = {"100","200","300","400","500","600","700","800","900","1000","5000"},
+                 BM25Set = {"0.1", "0.3","0.5","0.7","0.9"},
+                 PL2Set = {"0.1", "1", "10", "20", "50"},
+               //  LMDSet = {"100","200","300","400","500","600","700","800"},
+
+                // Complement
                  result;
         if (p.model.equals("BM25"))
             result = BM25Set;
@@ -309,56 +306,66 @@ private String getCurrentTime() {
     private void processExperimentSet () throws Exception
     {
         // This function is used to process the whole experiment Set
-         String b , retB  = "0", bashLines = ""  ;
+         String coefficient , retB  = "0", bashLines = ""  ;
          String bRange[] = getbRange();
          for (int i = 0; i < bRange.length; i++) {
-             b = bRange[i];
+             coefficient = bRange[i];
          if (p.exType.equals("Gravity"))
              retB = "0.5";
-        csvPaser.newLine(getNewKey(retB,b));
+        csvPaser.newLine(getNewKey(retB,coefficient));
 
         switch (p.exType)
             {
                 case "All":
-                    csvPaser.setRes(runRetrievalExperiment(b));
+                    csvPaser.setRes(runRetrievalExperiment(coefficient));
                     // Checking ValidRetrievability Inside These Functions
-                    runALLRC(b);
-                    bashLines += getBashLine(b);
+                    runALLRC(coefficient);
+                    bashLines += getBashLine(coefficient);
                     break;
                 case "AllRC":
-                    runALLRC(b);
+                    runALLRC(coefficient);
                     break;
                 case "Cumulative":
                 case "Gravity":
                     if (validRetrievability())
-                        csvPaser.setRet(runRCExperiment(b,retB));
+                        csvPaser.setRet(runRCExperiment(coefficient,retB));
                     break;
 
                 case "Retrieval":
-                    csvPaser.setRes(runRetrievalExperiment(b));
-                    bashLines += getBashLine(b);
+                    csvPaser.setRes(runRetrievalExperiment(coefficient));
+                    bashLines += getBashLine(coefficient);
                     break;
                 case "Performance" :
-                    csvPaser.setPerformance(getPerformanceValues(b));
+                    if (!validRetrievability())
+                        csvPaser.setPerformance(getPerformanceValues(coefficient));
                     break;
                 case "ReadSts":
-                    if (p.maxResults.equals("1000"))
-                        csvPaser.setPerformance(getPerformanceValues(b));
-                    csvPaser.setRes(runRetrievalStatistics(b));
                     if (validRetrievability())
-                    {
-                        csvPaser.setRet(runRCStatistics(b,"Cumulative"));
+                        {
+                        retB = "0";
+                        csvPaser.setKey(getNewKey(retB,coefficient));
+                        csvPaser.setRes(runRetrievalStatistics(coefficient));
+                        csvPaser.setRet(runRCStatistics(coefficient,retB));
                         csvPaser.addCSVLineToMap();
-                        csvPaser.setKey(getNewKey("0.5",b));
-                        csvPaser.setRet(runRCStatistics(b,"Gravity"));
-                    } // End if
+                        retB = "0.5";
+                        csvPaser.setKey(getNewKey(retB,coefficient));
+                        csvPaser.setRes(runRetrievalStatistics(coefficient));
+                        csvPaser.setRet(runRCStatistics(coefficient,retB));
+                      } // End if
+                   else
+                    {
+                        retB = "0";
+                        csvPaser.setKey(getNewKey(retB,coefficient));
+                        csvPaser.setRes(runRetrievalStatistics(coefficient));
+                        csvPaser.setPerformance(getPerformanceValues(coefficient));
+                    } // End Else
             } // End Switch
             csvPaser.addCSVLineToMap();
 
         } // End For
 
         if (!bashLines.isEmpty())
-            printOutput(p.outputDir + "/bash.sh" , bashLines);
+            printOutput(filePrefix + "bash.sh" , bashLines);
         csvPaser.updateCSVFile();
 
     } // End Function
@@ -384,17 +391,18 @@ private String getCurrentTime() {
             runExperimentFile(file);
     }
 
-    private void runCalculatedList ()
+    public void runCalculatedList ()
     {
         String paramFileName =  "params/BMExperimentSets/Experiment2.xml";
        String[] indexNames = {
               /* "AquaintBigramIndex","AquaintCombinedIndex","AquaintUnigramIndex" , "AquaintFieldedIndex",
                "Core17UnigramIndex","Core17BigramIndex","Core17CombinedIndex"  , "Core17FieldedIndex"*/
-              // "WAPOUnigramIndex","WAPOBigramIndex","WAPOCombinedIndex"  , "WAPOFieldedIndex"
-               "WAPOUnigramIndex","WAPOBigramIndex","WAPOCombinedIndex"  , "WAPOFieldedIndex"
+             //  "WAPOUnigramIndex","WAPOBigramIndex","WAPOCombinedIndex"  , "WAPOFieldedIndex"
+               "WAPOFieldedIndex"
        };
        String maxResults[] = {"100","1000"};
-        String models[] = {"BM25","PL2","LMD"};
+       String models[] = {"BM25","PL2"};
+      //   String models[] = {"LMD"};
        for (int m = 0 ; m < models.length ; m++)
            for ( int i = 0 ; i < indexNames.length ; i++)
                for (int j=0 ; j < maxResults.length ; j++ )
@@ -408,9 +416,10 @@ private String getCurrentTime() {
     private void cloneMap()
     {
         RetrievabilityCalculatorApp retApp = new RetrievabilityCalculatorApp("");
+        String indexName =  "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\BiasMeasurementExperiments\\Indexes\\WAPOUnigramIndex";
         try {
-            retApp.initDocumentMap("C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\BiasMeasurementExperiments\\Indexes\\WAPOUnigramIndex");
-            initMap = (HashMap<String, Double>) retApp.docMap.clone();
+
+            initMap = retApp.cloneMap(indexName);
             retApp = null;
         } catch (Exception e) {
             e.printStackTrace();
@@ -422,7 +431,8 @@ private String getCurrentTime() {
             String sourceFile = "params\\BMExperimentSets\\Experiment2.xml",
                     result;
         RunExperimentSet re = new RunExperimentSet();
-        re.cloneMap();
+
+
         re.runCalculatedList();
         // re.runExperimentFile(sourceFile);
 
@@ -437,5 +447,5 @@ class ExperimentSetParams  {
             model,
             retrievalParamsFile,
             retrievabilityParamsFile,
-            outputDir;
+            csvFile;
 }

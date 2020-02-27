@@ -8,9 +8,9 @@
     Core17UnigramIndex Core17BigramIndex Core17CombinedIndex Core17FieldedIndex
     -->
 
-    <indexName>WAPOUnigramIndex</indexName>
+    <indexName>WAPOFieldedIndex</indexName>
 
-    <maxResults>100</maxResults>
+    <maxResults>1000</maxResults>
    <!-- <queryFile>out/Core17/General/Queries/300K.qry</queryFile>-->
    <!--
     Filled Automatically Based on MaxResults
@@ -18,7 +18,7 @@
     <queryFile></queryFile>
 
     <!--BM25 - LMD - PL2-->
-    <model>BM25</model>
+    <model>PL2</model>
     <!--
   Available Experiment Run Types
   1- Performance : Run Trec_Eval Performance from Trec_Eval files ( Required : run bash.sh is required first )
@@ -29,12 +29,12 @@
   6- All : Run All Experiments ( Retrieval + DocumentCounter + Gravity ) except performance
   7- ReadSts : Read Previously Calculated res and ret Files
    -->
-    <exType>All</exType>
+    <exType>ReadSts</exType>
    <!-- Parameter Files -->
+
     <retrievalParamsFile>params/temp_retrieval_params.xml</retrievalParamsFile>
     <retrievabilityParamsFile>params/temp_retrievability_calculator_params.xml</retrievabilityParamsFile>
     <!--Output Parameters-->
     <!--  Sample Output Dir :  out\Core17\UnigramIndex\50\C1000\CombinedgramFilter-->
-    <outputDir></outputDir> <!--Filled Automatically Based on QueryFile & MaxResults & IndexName-->
-
+    <csvFile></csvFile>
 </retrievalParams>

@@ -8,7 +8,7 @@
     Core17UnigramIndex Core17BigramIndex Core17CombinedIndex Core17FieldedIndex
     -->
 
-    <indexName>WAPOFieldedIndex</indexName>
+    <indexName>WAPOUnigramIndex</indexName>
 
     <maxResults>1000</maxResults>
    <!-- <queryFile>out/Core17/General/Queries/300K.qry</queryFile>-->
@@ -18,12 +18,12 @@
     <queryFile></queryFile>
 
     <!--BM25 - LMD - PL2-->
-    <model>PL2</model>
+    <model>BM25</model>
     <!--
   Available Experiment Run Types
   1- Performance : Run Trec_Eval Performance from Trec_Eval files ( Required : run bash.sh is required first )
   2- Retrieval : Run Retrieval Experiment Only
-  3- DocumentCounter : Run Only DocumentCounter Retrievability ( Requires : Run Retrieval first )
+  3- Cumulative : Run Only DocumentCounter Retrievability ( Requires : Run Retrieval first )
   4- Gravity : Run Only Gravity Retrievability ( Requires : Run Retrieval first )
   5- AllRC : Run All Retrievalbility Calculator Experiments ( DocumentCounter & Gravity )
   6- All : Run All Experiments ( Retrieval + DocumentCounter + Gravity ) except performance
@@ -35,6 +35,9 @@
     <retrievalParamsFile>params/temp_retrieval_params.xml</retrievalParamsFile>
     <retrievabilityParamsFile>params/temp_retrievability_calculator_params.xml</retrievabilityParamsFile>
     <!--Output Parameters-->
-    <!--  Sample Output Dir :  out\Core17\UnigramIndex\50\C1000\CombinedgramFilter-->
-    <csvFile></csvFile>
+    <!--  Main Directory for all Files  :
+    default : C:\Users\kkb19103\Desktop\My Files 07-08-2019\BiasMeasurementExperiments\WAPO 26-02-2020
+    -->
+    <mainDir></mainDir>
+    <csvPath></csvPath>
 </retrievalParams>

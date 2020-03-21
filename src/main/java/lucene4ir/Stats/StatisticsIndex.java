@@ -175,7 +175,7 @@ public class StatisticsIndex {
 
     private void openWriter (String extra) throws Exception
     {
-        String outFileName =  outDir + indexName + fldName + extra + ".sts";
+        String outFileName =  outDir + indexName + fldName + extra + ".txt";
         if (!screenOutput)
             pr = new PrintWriter(outFileName);
     }
@@ -391,6 +391,18 @@ private void  checkAnalyzer (String all , String indexType) throws Exception
         }
     }
 
+    private void printDocIDs () throws Exception
+    {
+        String id;
+        openReader();
+        openWriter("");
+        for (int i = 0 ; i < reader.maxDoc() ; i++)
+        {
+            id = reader.document(i).get("id");
+            pr.println(id);
+        }
+        pr.close();
+    }
     private void countFiller(int docid) throws Exception
     {
         String line ;
@@ -462,16 +474,18 @@ private void  checkAnalyzer (String all , String indexType) throws Exception
 
        StatisticsIndex sts = new StatisticsIndex();
       /*  AquaintUnigramIndex AquaintBigramIndex AquaintCombinedIndex AquaintFieldedIndex
-        Core17UnigramIndex Core17BigramIndex Core17CombinedIndex Core17FieldedIndex */
+        Core17UnigramIndex Core17BigramIndex Core17CombinedIndex Core17FieldedIndex
+        WAPOUnigramIndex
+        */
 
        // sts.indexesFolder = "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\BiasMeasurementExperiments\\Indexes\\";
       //  sts.indexesFolder = "I:\\Science\\CIS\\abdulaziz\\Indexes\\Lucene4IR\\";
-        sts.indexesFolder = "";
-        sts.indexName =  "AquaintUnigramIndex";
+        sts.indexesFolder = "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\BiasMeasurementExperiments\\Indexes\\";
+        sts.indexName =  "AquaintIndex";
         sts.fldName = Lucene4IRConstants.FIELD_RAW;
-        sts.outDir = "C:\\Users\\kkb19103\\Desktop\\CheckTerms\\";
+        sts.outDir = "C:\\Users\\kkb19103\\Desktop\\DocMaps\\";
 
-        sts.screenOutput = true;
+        sts.screenOutput = false;
         sts.maxdoc = 0;
         try {
 
@@ -484,7 +498,8 @@ private void  checkAnalyzer (String all , String indexType) throws Exception
           //  sts.printDocLength(0);
 
            // sts.printTermList(1,false);
-           sts.printTermCount(-1);
+         //  sts.printTermCount(-1);
+            sts.printDocIDs();
          //   sts.printDocCount();
            // sts.printDocLength(Lucene4IRConstants.FIELD_RAW);
           //  sts.printLeavesCount();

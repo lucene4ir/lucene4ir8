@@ -1,14 +1,5 @@
-import operator
 import pandas as pd
-import numpy as np
-
-def getCorpus (c):
-    switcher = {
-        'A':'Aquaint',
-        'C':'Core17',
-        'W':'WAPO'
-    }
-    return switcher.get(c.upper())
+from src.classes.clsGeneral import General as gen
 
 def getModel (model):
     model = model.upper()
@@ -44,7 +35,7 @@ def main ():
     [i,model] = getModel('mu')
     catf = []
     for corpus in 'a,c,w'.split(','):
-        corpus = getCorpus(corpus)
+        corpus = gen.getCorpus(corpus)
         df = sortFile(i,model,corpus)
         if len(catf) == 0 :
             catf = df

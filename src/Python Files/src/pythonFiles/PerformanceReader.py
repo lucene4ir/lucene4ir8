@@ -1,19 +1,15 @@
-import clsCWL as cwl
-import clsTrec as trec
+from src.classes.clsGeneral import General as gen
+from src.classes.clsCWL import cwlEval as cwl
+from src.classes.clsTrec import TrecClass as trec
 import os
 
 def getCWLInfo(resFile, gainFile):
     [Map,P10,R6,R8] = cwl.cwlEval.getUsingUbuntu(resFile,gainFile)
     return [Map,P10,R6,R8]
 
-def getResFolder(fbdocs , corpus):
-    switcher = {
-        'A': 'AQUAINT',
-        'C': 'CORE17',
-        'W': 'WAPO'
-    }
-    cFolder = switcher.get(corpus)
 
+def getResFolder(fbdocs , corpus):
+    cFolder = gen.getCorpus(corpus).upper()
 
     if (fbdocs == '0'):
         # switcher = {
@@ -53,21 +49,16 @@ def getFileName (csvLine):
         qry = parts[3]
         model = parts[4]
         c = 'C' + parts[5]
-        switcher = {
-            'BM25':'b',
-            'PL2':'c',
-            'LMD':'mu'
-        }
         coefficient =  parts[8]
         if (coefficient == '1' or coefficient == '5'):
             coefficient += '.0'
-        coefficient = switcher.get(model) + coefficient
+        coefficient = gen.getModelCoefficient(model) + coefficient
         result = '-'.join([corpus,model,index,qry,c,coefficient])
     else :
         # WA-BM25-UI-50-C1000-RM3-fbdocs05-fbterms10-b0.3.res
 
         model = parts[4]
-        modelc = getModelCoefficient(model)
+        modelc = gen.getModelCoefficient(model)
         coefficient = parts[8].replace(modelc, '').replace('.res', '')
         # if (coefficient == '0' or coefficient == '1' or coefficient == '5'):
         #     coefficient += '.0'
@@ -148,17 +139,12 @@ def getCSVLine(file):
     # corpus,indexType,qryFilter,qryCount,model,maxResults,fbTerms,fbDocs,RetrievalCoefficient
     # Trec-MAP,Trec-Bref,Trec-P10,CWL-MAP,CWL-P10,CWL-RBP0.6,CWL-RBP0.8
 
-    switcher = {
-        'A' : 'Aquaint',
-        'C': 'Core17',
-        'W':'WAPO'
-    }
     parts = file.rsplit('-', 3)
-    corpus = switcher.get(parts[0][0].upper())
+    corpus = gen.getCorpus(parts[0][0])
     fbdocs = parts[1].replace('fbdocs', '')
     fbterms = parts[2].replace('fbterms', '')
     model = parts[0].split('-',2)[1]
-    modelc = getModelCoefficient(model)
+    modelc = gen.getModelCoefficient(model)
     coefficient = parts[3].replace(modelc, '').replace('.res', '')
     if (coefficient == '0.0' or coefficient == '1.0'):
         coefficient = coefficient[0]
@@ -182,14 +168,7 @@ def appendToCSV(csvPath,resFolder):
             f.write(line + '\n')
     f.close()
 
-def getModelCoefficient (model):
-    if model == 'BM25':
-        result = 'b'
-    elif model == 'LMD':
-        result = 'mu'
-    else:
-        result = 'c'
-    return result
+
 
 def requiredLine(line , lineCtr):
     # CSV Line Format :

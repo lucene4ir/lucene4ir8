@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from src.classes.clsGeneral import General as gen
 
 def calculate_res_map(res_file, b, c):
     # Given Res File - C - b : Calculate Retrievability MAP
@@ -54,19 +55,31 @@ def mergeMaps(docMap, resMap):
     # Replace Nan values in Res R Column with Zero
     df.fillna(0, axis=1, inplace=True)
     return df
+#
+# def getCorpus (c):
+#     switcher = {
+#         'A':'Aquaint',
+#         'C' : 'Core17',
+#         'W' : 'WAPO'
+#     }
+#     return switcher.get(c.upper())
+
+def getMapFile (resFile):
+    mapFolder = r'C:\Users\kkb19103\Desktop\DocMaps'
+    corpus = resFile.split('\\', 2)[1][0]
+    corpus = gen.getCorpus(corpus)
+    # C:\Users\kkb19103\Desktop\DocMaps\WapoDocMap.txt
+    mapFile = '%s\%sDocMap.txt' % (mapFolder, corpus)
+    return mapFile
 
 class cslRetrievabilityCalculator:
     def calculate(resFile , b , c , outFile):
-        mapFile = r'C:\Users\kkb19103\Desktop\DocMaps\WapoDocMap.txt'
-        b = 0.5
-        c = 100
-        resFile = r'C:\Users\kkb19103\Desktop\WA-BM25-BI-300K-C100-b0.4.res'
-        outputFile = r'out.csv'
-
+        # resFile = r'C:\Users\kkb19103\Desktop\WA-BM25-BI-300K-C100-b0.4.res'
+        mapFile = getMapFile(resFile)
         # Initialize DocMap
         docDf = initDocMap(mapFile)
         # Calculate R MAP
-        [rSum, resDf] = calculate_res_map(resFile, b, c)
+        [rSum, resDf] = calculate_res_map(resFile, float(b), c)
         # Merge Both Maps
         mergeDf = mergeMaps(docDf, resDf)
         # Release Memory
@@ -75,8 +88,8 @@ class cslRetrievabilityCalculator:
         # Calculate G
         G = calculateG(mergeDf, rSum)
         # output MAP
-        if outputFile != '':
-            mergeDf.to_csv(outputFile, sep='\t', header=False, index=False)
+        if outFile != '':
+            mergeDf.to_csv(outFile, sep='\t', header=False, index=False)
         criteria = mergeDf['r'] == 0
         ctr_zero = len(mergeDf[criteria])
         return [G , ctr_zero , rSum]

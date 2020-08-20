@@ -3,22 +3,20 @@ from src.classes.clsGeneral import General as gen
 import os
 
 resFolder = ''
-retFolder = ''
 
-def getRetFile(key,b):
+def getRetFile(key,b,coefficient):
     # CSV Line Format :
     # corpus,indexType,qryFilter,qryCount,model,maxResults,fbTerms,fbDocs,RetrievalCoefficient
     # WA-BM25-UI-300K-C100-gb0.5-b0.2.ret
-    global retFolder
+    global resFolder
     parts = key.split(',')
     corpus = parts[0][:2].upper()
     model = parts[4]
     modelc = gen.getModelCoefficient(model)
-    coefficient = parts[8]
-    result = '%s\%s-%s-UI-300K-C100-gb%s-%s%s.ret' % (retFolder,corpus,model,b,modelc,coefficient)
+    result = '%s\%s-%s-UI-300K-C100-gb%s-%s%s.ret' % (resFolder,corpus,model,b,modelc,coefficient)
     return result
 
-def getResFileName (key):
+def getResFileName (key,coefficient):
     # Get File Name Given CSV
     # CSV Line Format :
     # corpus,indexType,qryFilter,qryCount,model,maxResults,fbTerms,fbDocs,RetrievalCoefficient
@@ -36,17 +34,14 @@ def getResFileName (key):
         qry = parts[3]
         model = parts[4]
         c = 'C' + parts[5]
-        coefficient =  parts[8]
         if (coefficient == '1' or coefficient == '5'):
             coefficient += '.0'
         coefficient = gen.getModelCoefficient(model) + coefficient
         result = '-'.join([corpus,model,index,qry,c,coefficient])
     else :
         # WA-BM25-UI-50-C1000-RM3-fbdocs05-fbterms10-b0.3.res
-
         model = parts[4]
         modelc = gen.getModelCoefficient(model)
-        coefficient = parts[8].replace(modelc, '').replace('.res', '')
         result =  '%s\%s-%s-UI-300K-C100-RM3-fbdocs%s-fbterms%s-%s%s.res' % \
                   (resFolder,corpus,model,fbdocs,fbterms,modelc,coefficient)
     return result
@@ -73,13 +68,15 @@ def iterateByCSV(csvPath):
             parts = line.rsplit(',',5)
             key = parts[0]
             b = parts[1]
+            coefficient = parts[2]
             c = 100
-            resFile = getResFileName(key)
-            outFile = getRetFile (key,b)
+            resFile = getResFileName(key,coefficient)
+            outFile = getRetFile (key,b,coefficient)
             [G , zeroCtr , rSum] = rc.calculate(resFile , b , c , outFile)
             update = True
             line = ','.join([key,
                                 b,
+                                coefficient,
                                 str(G),
                                 str(zeroCtr),
                                 str(rSum)]) + '\n'
@@ -113,8 +110,8 @@ def getCSVLine(file):
     coefficient = parts[3].replace(modelc, '').replace('.res', '')
     if (coefficient == '0.0' or coefficient == '1.0'):
         coefficient = coefficient[0]
-    prefix = 'UnigramIndex,combinedQuery,300K,%s,100,%s' % (model,'bVal')
-    result = ','.join([corpus, prefix, fbterms, fbdocs, coefficient]) + ','
+    prefix = 'UnigramIndex,combinedQuery,300K,%s,100' % (model)
+    result = ','.join([corpus, prefix, fbterms, fbdocs,'bVal',coefficient]) + ','
     for i in range(2):
         result += ' ,'
     result += ' '
@@ -125,11 +122,14 @@ def getCSVLine(file):
 def appendToCSV(csvPath,resFolder):
     files = os.listdir(resFolder)
     f = open(csvPath,'a')
+    # lineCtr = 0
     for file in files:
         if os.path.isfile(resFolder + '/' + file):
             line = getCSVLine(file)
-            print(line)
-            #f.write(line + '\n')
+            if (requiredLine(line,0)):
+                # lineCtr += 1
+                # print(lineCtr  , line)
+                f.write(line + '\n')
     f.close()
 
 def requiredLine(line , lineCtr):
@@ -140,16 +140,15 @@ def requiredLine(line , lineCtr):
     parts = line.split(',')
     # corpus = line[0].upper()
     # model = parts[4]
-    # fbterms = int(parts[6])
+    fbterms = int(parts[6])
     # fbdocs = int(parts[7])
-    # coefficient = float(parts[8])
-    return True
+    coefficient = float(parts[9])
+    return coefficient != 0.75 and fbterms > 0
 
 def main():
-    global resFolder , retFolder
+    global resFolder
     csvPath = r'C:\Users\kkb19103\Desktop\CSV\CSV\ret.csv'
-    resFolder = r'C:\Users\kkb19103\Desktop\My Files 07-08-2019\LUCENE\anserini-master\out\NewSet'
-    retFolder = resFolder
+    resFolder = r'C:\Users\kkb19103\Desktop\My Files 07-08-2019\LUCENE\anserini-master\out\RM3\Bias Measurement'
     # appendToCSV(csvPath,resFolder)
     iterateByCSV(csvPath)
 

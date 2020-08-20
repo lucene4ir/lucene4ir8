@@ -46,6 +46,7 @@ class TrecClass() :
                result = [map, bpref, p10]
                break
         return result
+
     def createBash (resFolder,bashFile):
         if ospath.exists(resFolder):
             files = os.listdir(resFolder)

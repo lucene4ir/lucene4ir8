@@ -11,7 +11,6 @@
 # </narr>
 # </top>
 
-
 def generateXMLTopics():
     path = r"C:\Users\kkb19103\Desktop"
     sourceFile = path + "\\300K.qry"

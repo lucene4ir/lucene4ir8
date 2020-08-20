@@ -55,18 +55,10 @@ def mergeMaps(docMap, resMap):
     # Replace Nan values in Res R Column with Zero
     df.fillna(0, axis=1, inplace=True)
     return df
-#
-# def getCorpus (c):
-#     switcher = {
-#         'A':'Aquaint',
-#         'C' : 'Core17',
-#         'W' : 'WAPO'
-#     }
-#     return switcher.get(c.upper())
 
 def getMapFile (resFile):
     mapFolder = r'C:\Users\kkb19103\Desktop\DocMaps'
-    corpus = resFile.split('\\', 2)[1][0]
+    corpus = resFile.rsplit('\\', 1)[1][0]
     corpus = gen.getCorpus(corpus)
     # C:\Users\kkb19103\Desktop\DocMaps\WapoDocMap.txt
     mapFile = '%s\%sDocMap.txt' % (mapFolder, corpus)

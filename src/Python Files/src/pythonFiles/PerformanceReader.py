@@ -158,14 +158,14 @@ def getCSVLine(file):
 
 def appendToCSV(csvPath,resFolder):
     files = os.listdir(resFolder)
-    f = open(csvPath,'a')
+    # f = open(csvPath,'a')
     ctr = 0
     for file in files:
         if os.path.isfile(resFolder + '/' + file):
             line = getCSVLine(file)
             ctr += 1
-            # print(str(ctr) , line)
-            f.write(line + '\n')
+            print(str(ctr) , line)
+            # f.write(line + '\n')
     f.close()
 
 
@@ -186,9 +186,9 @@ def requiredLine(line , lineCtr):
     # return True
 
 def main():
-    csvPath = r'C:\Users\kkb19103\Desktop\CSV\CSV\per.csv'
-    # resFolder = r'C:\Users\kkb19103\Desktop\My Files 07-08-2019\LUCENE\anserini-master\out\NewSet'
-    # appendToCSV(csvPath,resFolder)
+    csvPath = r'C:\Users\kkb19103\Desktop\CSV\CSV\ret.csv'
+    resFolder = r'C:\Users\kkb19103\Desktop\My Files 07-08-2019\LUCENE\anserini-master\out\RM3\Bias Measurement'
+    appendToCSV(csvPath,resFolder)
     # iterateByCSV(csvPath)
 
 if __name__ == '__main__':

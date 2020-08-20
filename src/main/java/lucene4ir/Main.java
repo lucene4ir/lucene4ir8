@@ -67,9 +67,13 @@ public class Main {
         ta = null;
 
     }
+
+    private void createDocFile (String indexName , String outFile)
+    {
+
+    }
     public static void main(String[] args)  {
-	RunExperimentSet re = new RunExperimentSet();
-    re.runCalculatedList();
+
 
     }
 }

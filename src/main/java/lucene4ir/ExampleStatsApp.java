@@ -135,7 +135,7 @@ public class ExampleStatsApp {
         The direct index must be stored for this to work... how do we store it, though?
          */
 
-        Terms t = reader.getTermVector(docid, "title");
+        Terms t = reader.getTermVector(docid, "raw");
         System.out.println("title Length: " + t.getSumDocFreq());
 
         long tot = 0;
@@ -151,12 +151,7 @@ public class ExampleStatsApp {
 
             while ((term = te.next()) != null) {
                 System.out.println("terms: " + term.utf8ToString());
-
-
             }
-
-
-
         }
 
         t = reader.getTermVector(docid, "content");

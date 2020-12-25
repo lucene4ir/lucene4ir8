@@ -1,5 +1,5 @@
 import pandas as pd
-import numpy as np
+from pathlib import Path as pth
 from src.classes.clsGeneral import General as gen
 
 def calculate_res_map(res_file, b, c):
@@ -18,18 +18,21 @@ def calculate_res_map(res_file, b, c):
     else:
         df['r'] = df['rank'] ** -b
     # Group Resultant Map By Doc ID
-    df = df.groupby('docid').agg({'r': np.sum})
+    # df = df.groupby('docid').agg({'r': [np.sum,'count']})
+    df = df.groupby('docid').agg({'r': ['sum', 'count']})
+    df.columns = df.columns.droplevel(0)
+    df.rename(columns={'sum':'r','count':'rcount'},inplace=True)
     # Calculate r_sum
-    r_sum = df['r'].sum()
-    return [r_sum, df]
+    # r_sum = df['r'].sum()
+    return df
 
 def initDocMap(mapFile):
     # Given mapFile path (Simply list of docIds) get DocMap by adding r = 0 to all documents
     df = pd.read_csv(mapFile, names=['docid'])
-    df['r'] = 0
+    # df['r'] = 0
     return df
 
-def calculateG(df, rSum):
+def calculateG(df):
     # Given Merged Map and rSum  calculate G
     num_head = 'numerator'
     # Sort and reindex map based on r values
@@ -44,20 +47,23 @@ def calculateG(df, rSum):
     # Total Numerator
     sumNumerator = df[num_head].sum()
     # Calculate G
+    rSum = df['r'].sum()
     G = sumNumerator / (N * rSum)
-    return G
+    return [G,rSum]
 
 def mergeMaps(docMap, resMap):
     # Given DocMap and ResMap - Merge both based on doc id
-    df = pd.merge(docMap, resMap, how='left', on='docid', suffixes=["_x", ""])
+    # df = pd.merge(docMap, resMap, how='left', on='docid', suffixes=["_x", ""])
+    df = pd.merge(docMap, resMap, how='left', on='docid')
     # Drop Additional DocMap r Column after Merge
-    df.drop('r_x', axis=1, inplace=True)
+    # df.drop('r_x', axis=1, inplace=True)
     # Replace Nan values in Res R Column with Zero
     df.fillna(0, axis=1, inplace=True)
     return df
 
 def getMapFile (resFile):
-    mapFolder = r'C:\Users\kkb19103\Desktop\DocMaps'
+    # mapFolder = r'C:\Users\kkb19103\Desktop\DocMaps'
+    mapFolder = str(pth(__file__).parent.parent) + '\DocMaps'
     corpus = resFile.rsplit('\\', 1)[1][0]
     corpus = gen.getCorpus(corpus)
     # C:\Users\kkb19103\Desktop\DocMaps\WapoDocMap.txt
@@ -71,17 +77,20 @@ class cslRetrievabilityCalculator:
         # Initialize DocMap
         docDf = initDocMap(mapFile)
         # Calculate R MAP
-        [rSum, resDf] = calculate_res_map(resFile, float(b), c)
+        resDf = calculate_res_map(resFile, float(b), c)
         # Merge Both Maps
         mergeDf = mergeMaps(docDf, resDf)
         # Release Memory
         resDf = None
         docDf = None
         # Calculate G
-        G = calculateG(mergeDf, rSum)
+        [G,rSum] = calculateG(mergeDf)
         # output MAP
         if outFile != '':
             mergeDf.to_csv(outFile, sep='\t', header=False, index=False)
         criteria = mergeDf['r'] == 0
         ctr_zero = len(mergeDf[criteria])
+
+        # mergeDf['r'] = mergeDf['r'] / mergeDf['rcount']
+        # [NG,r] = calculateG(mergeDf)
         return [G , ctr_zero , rSum]

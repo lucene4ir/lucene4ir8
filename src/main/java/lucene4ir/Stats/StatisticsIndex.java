@@ -12,6 +12,7 @@ Created By : Abdulaziz AlQatan - 21/07/2019
 
 package lucene4ir.Stats;
 
+import javafx.scene.control.RadioMenuItem;
 import lucene4ir.ExampleStatsApp;
 import lucene4ir.Lucene4IRConstants;
 import lucene4ir.utils.TokenAnalyzerMaker;
@@ -25,11 +26,13 @@ import org.apache.lucene.analysis.shingle.ShingleFilter;
 import org.apache.lucene.analysis.shingle.ShingleFilterFactory;
 import org.apache.lucene.analysis.standard.StandardTokenizer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
-import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Terms;
-import org.apache.lucene.index.TermsEnum;
+import org.apache.lucene.index.*;
+import org.apache.lucene.search.CollectionStatistics;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.TermStatistics;
+import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.BytesRef;
 
 import java.io.IOException;
@@ -399,9 +402,8 @@ private void  checkAnalyzer (String all , String indexType) throws Exception
         for (int i = 0 ; i < reader.maxDoc() ; i++)
         {
             id = reader.document(i).get("id");
-            pr.println(id);
+            this.printLine(id);
         }
-        pr.close();
     }
     private void countFiller(int docid) throws Exception
     {
@@ -464,6 +466,24 @@ private void  checkAnalyzer (String all , String indexType) throws Exception
         return sb.toString();
     }
 
+    public void printDocLengths () throws Exception
+    {
+//        ExampleStatsApp ex = new ExampleStatsApp();
+        openReader();
+//        String id = reader.document(0).get("id");
+//        TermsEnum termsEnum = reader.getTermVector( 1, fldName ).iterator();
+        long doclen = 0;
+//        while ( termsEnum.next() != null )
+//            doclen += termsEnum.totalTermFreq();
+
+        IndexSearcher is = new IndexSearcher(reader);
+        Similarity s = is.getSimilarity();
+        FieldInvertState state = new FieldInvertState(8,fldName,IndexOptions.DOCS_AND_FREQS_AND_POSITIONS);
+        s.computeNorm(state);
+//        doclen = state.getLength();
+
+        printLine(Long.toString(doclen));
+    }
     public static void main(String[] args) {
         /*
       Small :  smallFieldedIndex smallCombinedIndex smallBigramIndex smallUnigramIndex testIndex biraw
@@ -478,14 +498,17 @@ private void  checkAnalyzer (String all , String indexType) throws Exception
         WAPOUnigramIndex
         */
 
-       // sts.indexesFolder = "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\BiasMeasurementExperiments\\Indexes\\";
-      //  sts.indexesFolder = "I:\\Science\\CIS\\abdulaziz\\Indexes\\Lucene4IR\\";
+//        C:\Users\kkb19103\Desktop\My Files 07-08-2019\BiasMeasurementExperiments\Indexes\AquaintIndex
+//        sts.indexesFolder = "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\LUCENE\\anserini-master\\Indexes\\";
+//        sts.indexName =  "lucene-index.robust05.pos+docvectors+rawdocs";
+
         sts.indexesFolder = "C:\\Users\\kkb19103\\Desktop\\My Files 07-08-2019\\BiasMeasurementExperiments\\Indexes\\";
-        sts.indexName =  "AquaintIndex";
+        sts.indexName =  "WAPOUnigramIndex";
+
         sts.fldName = Lucene4IRConstants.FIELD_RAW;
         sts.outDir = "C:\\Users\\kkb19103\\Desktop\\DocMaps\\";
 
-        sts.screenOutput = false;
+        sts.screenOutput = true;
         sts.maxdoc = 0;
         try {
 
@@ -495,16 +518,15 @@ private void  checkAnalyzer (String all , String indexType) throws Exception
           //  removeStopWords(all);
            // sts.checkAnalyzer(all,"Combined");
           //  sts.countFiller(-1);
-          //  sts.printDocLength(0);
 
            // sts.printTermList(1,false);
-         //  sts.printTermCount(-1);
-            sts.printDocIDs();
-         //   sts.printDocCount();
-           // sts.printDocLength(Lucene4IRConstants.FIELD_RAW);
+           sts.printTermCount(0);
+//            sts.printDocIDs();
+//            sts.printDocCount();
+//            sts.printDocLengths();
           //  sts.printLeavesCount();
          //  sts.printTermLeavesCount();
-         //  sts.printFieldList();
+//           sts.printFieldList();
          //  sts.printIndexSet();
            sts.close();
         } catch (Exception e) {

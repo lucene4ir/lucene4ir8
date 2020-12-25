@@ -2,8 +2,8 @@
 class General:
     def getCorpus(c):
         switcher = {
-            'A': 'Aquaint',
-            'C': 'Core17',
+            'A': 'AQUAINT',
+            'C': 'CORE17',
             'W': 'WAPO'
         }
         return switcher.get(c.upper())
@@ -15,3 +15,11 @@ class General:
             'LMD': 'mu'
         }
         return switcher.get(model)
+
+    def getQryExpansion(c):
+        switcher = {
+            'A': 'AX',
+            'B': 'Baseline',
+            'R': 'RM3'
+        }
+        return switcher.get(c.upper())

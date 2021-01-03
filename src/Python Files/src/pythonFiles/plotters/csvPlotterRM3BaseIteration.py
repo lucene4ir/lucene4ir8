@@ -16,7 +16,7 @@ import src.pythonFiles.plotters.csvPlotterGeneral as gen
  Input Data
  @title Plot Bias & Performance Experiments
 """
-inCorpus = "Aquaint"  # @param ["Aquaint", "Core17", "WAPO","All"]
+inCorpus = "WAPO"  # @param ["Aquaint", "Core17", "WAPO","All"]
 inModel = "BM25"  # @param ["BM25", "LMD", "PL2" , "All"]
 inExp = "All"  # @param ["AX", "RM3",'All']
 ## @markdown The Number of values to plot - 0 for all
@@ -24,7 +24,7 @@ inExp = "All"  # @param ["AX", "RM3",'All']
 ## @markdown Use Predefined ticks from ticks.csv files
 ##PredefinedTicks = "No"  # @param ["Yes", "No"]
 inDisplayData = "No"  # @param ["Yes", "No"]
-inBase = "beta" # @param ["fbDocs", "fbTerms",'beta','']
+inBase = "fbDocs" # @param ["fbDocs", "fbTerms",'beta','']
 inXAxis = "TrecMAP"  # @param ["fbTerms",'fbDocs',"TrecMAP",'TrecNDCG' , "CWLMAP",'NDCG10','RBP0.4','RBP0.6','RBP0.8','P10']
 inYAxis = "G - Cumulative"  # @param ["G - Cumulative", "G - Gravity","TrecMAP","CWLMAP",'NDCG10','RBP0.4','RBP0.6','RBP0.8']
 

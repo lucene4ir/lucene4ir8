@@ -24,6 +24,7 @@ def getResFileName (key,coefficient):
     # File Name : WA-BM25-UI-50-C1000-RM3-fbdocs05-fbterms10-b0.3.res
     # beta File Name AQ-BM25-UI-50-C1000-AX-fbdocs20-fbterms30-b0.75-beta0.25.res
 
+    # CO-BM25-UI-300K-C100-AX-fbdocs25-fbterms30-b0.75.res
     global resFolder
     parts = key.split(',')
     fbdocs = parts[7]
@@ -53,6 +54,8 @@ def getResFileName (key,coefficient):
         modelc = gen.getModelCoefficient(model)
         result =  '%s\%s-%s-UI-300K-C100-%s-fbdocs%s-fbterms%s-%s%s-beta%s.res' % \
                   (resFolder,corpus,model,exp,fbdocs,fbterms,modelc,coefficient,beta)
+        # result = '%s\%s-%s-UI-300K-C100-%s-fbdocs%s-fbterms%s-%s%s.res' % \
+        #          (resFolder, corpus, model, exp, fbdocs, fbterms, modelc, coefficient)
     return result
 
 
@@ -75,7 +78,7 @@ def iterateByCSV(csvPath):
         # Filter Lines
         if requiredLine(line , lineCtr) :
             # print(lineCtr,line)
-            #             # continue
+            # continue
             parts = line.rsplit(',',5)
             key = parts[0]
             b = parts[1]
@@ -152,12 +155,12 @@ def requiredLine(line , lineCtr):
     # WAPO,UnigramIndex,combinedQuery,50,BM25,1000,5,10,0,0,0,0,0.512,0.733,0.783,0.755
     parts = line.split(',')
     # corpus = line[0].upper()
-    fbterms = float(parts[6])
+    # fbterms = float(parts[6])
     # fbdocs = parts[7]
     # model = parts[4]
     G = parts[10]
     # exp = parts[2]
-    result =  G == '' and fbterms > 0
+    result =  G == ''
     return result
 
 def main():
@@ -165,7 +168,7 @@ def main():
     dir = r'C:\Users\kkb19103\Desktop\My Files 07-08-2019\BiasMeasurementExperiments\2nd Experiment - RM3'
     csvPath = dir + '\CSV\Ex2Ret.csv'
     # resFolder = dir + '\AllRes\AXD\Bias Measurement'
-    resFolder = dir + '\AllRes\Beta FbDocs20 & FbTerms30\Ret'
+    resFolder = r'D:\Backup 16-12-2020\2nd Experiment - RM3\AllRes\Beta FbDocs20 & FbTerms30\Ret'
 
     # appendToCSV(csvPath,resFolder)
     iterateByCSV(csvPath)

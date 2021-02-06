@@ -1,5 +1,5 @@
 from src.classes.clsRetrievabilityCalculator import cslRetrievabilityCalculator as rc
-from src.classes.clsGeneral import General as gen
+from src.classes.general import General as gen
 import os
 
 resFolder = ''

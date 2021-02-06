@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path as pth
-import src.classes.clsGeneral as gen
+import src.classes.general as gen
 
 def calculate_res_map(res_file, b, c):
     # Given Res File - C - b : Calculate Retrievability MAP

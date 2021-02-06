@@ -1,6 +1,6 @@
 # Functions for Reverted Index Construction
 import pandas as pd
-import src.classes.clsGeneral as gen
+import src.classes.general as gen
 import src.pythonFiles.dedicatedProcess.XMLTopicsCreator as xml
 import src.classes.bash as sh
 
@@ -30,15 +30,65 @@ def constructRevertedIndex (basePath , scorePath , revertIndexPath,top):
     docid - Base qry - score
     '''
     print ('Creating Reverted Index')
-    dfBase = pd.read_csv(basePath,sep='\t')
-    dfScore = pd.read_csv(scorePath,sep=' ',names=gen.getResHeader())
-    df = dfScore.merge(dfBase,how='left',on='qryID')
-    dfScore = None
-    dfBase = None
-    df = df[['docid','baseQry','score']]
-    df.sort_values(['docid', 'score'], ascending=False, inplace=True)
+
+    f = open(basePath,'r',encoding="utf8")
+    line = f.readline()
+    # Save all Queries
+    qryDict = {}
+    for line in f:
+        parts = line.replace('\n','').split('\t')
+        [qryID , qry] = parts
+        qryDict[qryID] = qry
+
+    # Append Res Data [qryID,docid,score]
+    f = open(scorePath,'r',encoding="utf8")
+    line = f.readline()
+    resDict = {}
+    sep = '\t'
+    for line in f:
+        parts = line.split()
+        [qryID,docid,score] = parts[::2]
+        qry = qryDict[qryID] # Retrieve query From ID (Join)
+        if (docid in resDict):
+            resDict[docid][qry] = score
+        else:
+            resDict[docid] = {qry:score}
+
+    # Sort and Extract Top Documents From resDict then output lines
+    qryDict = None
+    hdr = sep.join(['docid','baseQry','score'])
+    lines = [hdr]
+    for key in resDict:
+        docid = key
+        val = resDict[key]
+        # Sorting By Score
+        val = dict(sorted(val.items(), reverse=True , key=lambda item: item[1]))
+        # Extracting head Values
+        temp = {}
+        for qry in list(val)[:top]:
+            score = val[qry]
+            temp[qry] = score
+            line = sep.join([docid,qry,score])
+            print(len(lines) , 'Line Added :' , line)
+            lines.append(line)
+        resDict[key] = temp
+
+    resDict = None
+    val = None
+    temp = None
+    f =  open(revertIndexPath,'w',encoding="utf8")
+    for line in lines:
+        f.write(line + '\n')
+
+    # dfBase = pd.read_csv(basePath,sep='\t')
+    # dfScore = pd.read_csv(scorePath,sep=' ',names=gen.getResHeader())
+    # df = dfScore.merge(dfBase,how='left',on='qryID')
+    # dfScore = None
+    # dfBase = None
+    #df = df[['docid','baseQry','score']]
+    #df.sort_values(['docid', 'score'], ascending=False, inplace=True)
     # df = df.groupby('docid').head(top)
-    df.to_csv(revertIndexPath,sep='\t',index=False)
+    #df.to_csv(revertIndexPath,sep='\t',index=False)
     print('Reverted Index Completed')
 
 def testRevertedIndex(rIndexPath):

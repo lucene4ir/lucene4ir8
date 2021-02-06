@@ -1,6 +1,6 @@
 # Functions for Reverted Index Construction
 import pandas as pd
-import src.classes.clsGeneral as gen
+import src.classes.general as gen
 import src.pythonFiles.dedicatedProcess.XMLTopicsCreator as xml
 import src.classes.bash as sh
 
@@ -55,12 +55,12 @@ if __name__ == '__main__':
     basePath = folder +  '\WA-BaseQueries-500K.qry'
     scorePath = folder + r'\baseScore.res'
     revertIndexPath = folder + r'\WA-PL2-500K-rIndex.idx'
-    dfPath= folder + r'\WA-Df-500K.sts'
-    outpath = folder + r'\WA-BaseQueries-500K.qry'
+    dfPath= folder + r'\WA-Df-bigger10.sts'
+    outpath = folder + r'\WA-BaseQueries-Df-10.qry'
     shFile = '~/anserini/bash/getBaseRes.sh'
     # extractQueries(dfPath,outpath)
-    # xml.generateXMLTopics(outpath,outpath.replace('500K','500KXML'))
-    # sh.runBashFile(shFile) # Takes Long Time
+    xml.generateXMLTopics(outpath,outpath.replace('Df-10','Df-10XML'))
+    sh.runBashFile(shFile) # Takes Long Time
     # Run Score
     # constructRevertedIndex(basePath,scorePath,revertIndexPath,50)
-    testRevertedIndex(folder + r'\firstStage.res')
+    # testRevertedIndex(folder + r'\firstStage.res')

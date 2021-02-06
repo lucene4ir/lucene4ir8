@@ -1,8 +1,8 @@
-import src.classes.clsTrec as trecCls
-import src.classes.clsCWL as cwlCls
+import src.classes.trec as trec
+import src.classes.CWL as cwl
 import src.classes.clsRetrievabilityCalculator as ret
 import pandas as pd
-import src.classes.clsGeneral as gen
+import src.classes.general as gen
 
 
 # *****************  AQUAINT Statistics ****************************************************
@@ -34,14 +34,14 @@ def cwl(resFile, gainFile):
     # Get CWL Results given resfile and gainFile
 
     # result = cwlCls.cwlEval.getMetricsValues(resFile, gainFile)
-    result = cwlCls.executeBash(resFile,gainFile)
+    result = cwl.executeBash(resFile, gainFile)
     print (result)
 
 def trec(resFile, gainFile):
     # Get Trec Results given resfile and gainFile
     # map , bpref , P.10 , ndcg'
-    # result = trecCls.TrecClass.getTrecData(resFile,gainFile)
-    result = trecCls.executeBash(resFile,gainFile)
+    result = trec.getTrecData(resFile, gainFile)
+    result = trec.executeBash(resFile, gainFile)
     print (result)
 
 def retrievability(resFile):

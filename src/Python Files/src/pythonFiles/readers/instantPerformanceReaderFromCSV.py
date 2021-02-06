@@ -7,9 +7,9 @@ Extract The results to regenerate
 '''
 
 import subprocess
-import src.classes.clsCWL as cwl
-import src.classes.clsTrec as trec
-import src.classes.clsGeneral as gen
+import src.classes.CWL as cwl
+import src.classes.trec as trec
+import src.classes.general as gen
 
 def processLine(line):
 # 'corpus,indexType,qryExpansion,beta,model,maxResults,fbTerms,fbDocs,RetrievalCoefficient,

@@ -1,5 +1,5 @@
 import pandas as pd
-import src.classes.clsGeneral as gen
+import src.classes.general as gen
 import src.pythonFiles.dedicatedProcess.XMLTopicsCreator as xml
 import src.pythonFiles.readers.readSingleResFile as trec
 import src.classes.bash as sh

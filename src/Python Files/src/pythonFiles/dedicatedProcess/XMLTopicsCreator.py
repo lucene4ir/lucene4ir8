@@ -18,30 +18,26 @@ Query</title>
 
 -----------------------------------
 '''
-
-import pandas as pd
-import csv
-
 def generateXMLTopics(sourceFile , destFile):
-    if (isinstance(sourceFile,pd.DataFrame)):
-        df = sourceFile
-    else:
-        df = pd.read_csv(sourceFile,sep='\t')
-    df['XML']=    '<top>\n' + \
-                  '<num> Number:'  + \
-                   df.iloc[:,0].map(str) + \
-                   '</num>\n' + \
-                  '<title>\n' + \
-                   df.iloc[:,1].map(str) + \
-                  '\n</title>\n' + \
+    sep = '\t'
+    XMLFormat =    '<top>\n' + \
+                  '<num> Number: #qryid </num>\n'  + \
+                  '<title>\n#query\n</title>\n' + \
                   '<desc>\n\n</desc>\n<narr>\n\n</narr>\n</top>\n'
 
-    df = df['XML']
-    df.to_csv(destFile,index=False,header=False , quoting=csv.QUOTE_NONE , escapechar=' ')
+    en = 'utf-8'
+    # fSource = open(sourceFile,'r',encoding=en)
+    # fDest = open(destFile,'w',encoding=en)
+    fSource = open(sourceFile, 'r')
+    fDest = open(destFile, 'w')
+    fSource.readline()
+    for line in fSource:
+        [qryid,qry] = line.replace('\n','').split(sep)
+        outLine = XMLFormat.replace('#qryid',qryid).replace('#query',qry)
+        fDest.write(outLine)
+    fSource.close()
+    fDest.close()
     print('Generating XML Queries is Done')
-
-
-
 
 if __name__ == '__main__':
     path = r'C:\Users\kkb19103\Desktop\My Files 07-08-2019\LUCENE\anserini\out'

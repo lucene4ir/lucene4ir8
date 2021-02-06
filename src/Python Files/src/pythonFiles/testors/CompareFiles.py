@@ -22,7 +22,7 @@ def compare(path1,path2):
 
 
 if __name__ == '__main__':
-    mainPath = r'C:\Users\kkb19103\Desktop\TempFiles\source'
-    path1 = mainPath + r'\AQ-BM25-UI-300K-C100-AX-fbdocs30-fbterms30-b0.75.res'
-    path2 = mainPath + r'\AQ-BM25-UI-300K-C100-Baseline-fbdocs0-fbterms0-b0.75.res'
+    mainPath = r'C:\Users\kkb19103\Desktop\My Files 07-08-2019\LUCENE\anserini\revertedIndex'
+    path2 = mainPath + r'\baseScore.res'
+    path1 = mainPath + r'\New\FirstStage.res'
     compare(path1,path2)

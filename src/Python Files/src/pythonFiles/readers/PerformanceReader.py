@@ -1,6 +1,6 @@
-from src.classes.clsGeneral import General as gen
-from src.classes.clsCWL import cwlEval as cwl
-from src.classes.clsTrec import TrecClass as trec
+from src.classes.general import General as gen
+from src.classes.CWL import cwlEval as cwl
+from src.classes.trec import TrecClass as trec
 import os
 
 def getCWLInfo(resFile, gainFile):

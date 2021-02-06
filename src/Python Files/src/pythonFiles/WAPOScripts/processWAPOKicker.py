@@ -2,7 +2,7 @@ import pandas as pd
 import src.classes.clsRetrievabilityCalculator as rc
 import matplotlib.pyplot as plt
 import src.pythonFiles.plotters.csvPlotterGeneral as pltGen
-import src.classes.clsGeneral as gen
+import src.classes.general as gen
 
 def extractDocMap(path):
     # df = pd.read_csv(path, '\t')
